@@ -75,7 +75,23 @@ def _():
 
 
 @app.cell
-def _(Rectangle):
+def _(mo):
+    n_size_min = 3
+    n_size_max = 15
+    n_size = mo.ui.slider(n_size_min, n_size_max, value=9)
+    return (n_size,)
+
+
+@app.cell
+def _(mo, n_size):
+    n_on_min = 1
+    n_on_max = n_size.value - 1
+    n_on = mo.ui.slider(n_on_min, n_on_max, value=n_on_min)
+    return (n_on,)
+
+
+@app.cell
+def _(Rectangle, np, plt):
     def add_squares_to_plot(ax, n_size, matrix, shift_x, shift_y, _square_offset, _square_size):
         for i in range(n_size):
             for j in range(n_size):
@@ -89,7 +105,121 @@ def _(Rectangle):
                                   facecolor=(1, 1, 1), alpha=gray_value)
                 ax.add_patch(square)
 
-    return (add_squares_to_plot,)
+    def create_plot(n_size, n_on):
+        # Matrix settings
+        # n = 5  # Size of the matrix (n x n)
+    
+        center = n_size.value // 2
+        matrix = np.zeros((n_size.value, n_size.value))
+    
+        # Single 102 um pixel in center
+        # matrix[center, center] = 1
+    
+        # 2x2 102 um pixels in center
+        if n_on.value == 1:
+            matrix[center, center] = 1
+        if (n_on.value % 2) != 0:
+            matrix[center-(n_on.value - 1):center, center-(n_on.value):center] = 1
+        else:
+            matrix[center-(n_on.value):center, center-(n_on.value):center] = 1
+    
+        # Set matrix element values
+        matrix *= 0.25
+    
+        # Create a figure and axis
+        fig, ax = plt.subplots()
+    
+        # Set the background color to black
+        fig.patch.set_facecolor('black')
+        ax.set_facecolor('black')
+    
+        # Square size settings
+        full_size = 1.0  # Full cell size in matrix coordinates
+        square_size = full_size * 0.825  # 20% reduction (80% of original size)
+        offset = (full_size - square_size) / 2  # Offset to center the square
+    
+        # Draw individual squares for the original positions
+        add_squares_to_plot(
+            ax, 
+            n_size=n_size.value, 
+            matrix=matrix, 
+            shift_x=0, 
+            shift_y=0, 
+            _square_offset=offset, 
+            _square_size=square_size
+        )
+    
+        # Draw individual squares for the shifted positions (y + 0.5)
+        add_squares_to_plot(
+            ax, 
+            n_size=n_size.value, 
+            matrix=matrix, 
+            shift_x=0, 
+            shift_y=0.5, 
+            _square_offset=offset, 
+            _square_size=square_size
+        )
+    
+        # Draw individual squares for the shifted positions (x + 0.5)
+        add_squares_to_plot(
+            ax, 
+            n_size=n_size.value, 
+            matrix=matrix, 
+            shift_x=0.5, 
+            shift_y=0, 
+            _square_offset=offset, 
+            _square_size=square_size
+        )
+    
+        # Draw individual squares for the shifted positions (x+0.5, y+0.5)
+        add_squares_to_plot(
+            ax, 
+            n_size=n_size.value, 
+            matrix=matrix, 
+            shift_x=0.5, 
+            shift_y=0.5, 
+            _square_offset=offset, 
+            _square_size=square_size
+        )
+    
+        # Add red vertical and horizontal lines at integer + 0.5 positions
+        line_positions = np.arange(0, n_size.value + 2, 0.5)  # Positions: 0.0, 0.5, 1.0, 1.5, ...
+        ax.vlines(line_positions, ymin=0, ymax=n_size.value + 0.5, colors='red', linewidth=1)
+        ax.hlines(line_positions, xmin=0, xmax=n_size.value, colors='red', linewidth=1)
+    
+        eps = 0.02
+        # Set axis limits to show the entire grid
+        ax.set_xlim(0 - eps, n_size.value + eps)
+        ax.set_ylim(0 - eps, n_size.value + eps)
+    
+        # Remove axis ticks and labels
+        ax.set_xticks([])
+        ax.set_yticks([])
+    
+        # Ensure the plot is square
+        ax.set_aspect('equal')
+    
+        # Return figure and axes objects
+        return fig, ax
+    return add_squares_to_plot, create_plot
+
+
+@app.cell
+def _(create_plot, n_on, n_size):
+    plot_fig, plot_ax = create_plot(n_size=n_size, n_on=n_on)
+    return (plot_fig,)
+
+
+@app.cell
+def _(mo, n_on, n_size, plot_fig):
+    mo.vstack(
+        [
+            mo.hstack([mo.md("n_size"), n_size, mo.md(f"{n_size.value}")], justify="start"), 
+            mo.hstack([mo.md("n_on"), n_on, mo.md(f"{n_on.value}")], justify="start"), 
+            mo.as_html(plot_fig).style({"width": "300px","height": "300px"})
+        ]
+    )
+    return
 
 
 @app.cell
@@ -110,7 +240,7 @@ def _(add_squares_to_plot, n_on, n_size, np, plt):
         matrix[center-(n_on.value - 1):center, center-(n_on.value):center] = 1
     else:
         matrix[center-(n_on.value):center, center-(n_on.value):center] = 1
-    
+
     # Set matrix element values
     matrix *= 0.25
 
@@ -188,26 +318,8 @@ def _(add_squares_to_plot, n_on, n_size, np, plt):
     ax.set_aspect('equal')
 
     # Show the plot
-    plt.show()
+    plt.gca()
     return line_positions, matrix
-
-
-@app.cell
-def _(mo):
-    n_size_min = 3
-    n_size_max = 15
-    n_size = mo.ui.slider(n_size_min, n_size_max, value=9)
-    n_size
-    return (n_size,)
-
-
-@app.cell
-def _(mo, n_size):
-    n_on_min = 1
-    n_on_max = n_size.value - 1
-    n_on = mo.ui.slider(n_on_min, n_on_max, value=n_on_min)
-    n_on
-    return (n_on,)
 
 
 @app.cell
