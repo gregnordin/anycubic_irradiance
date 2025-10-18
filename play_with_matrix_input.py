@@ -23,27 +23,25 @@ def _(grid, mo, set_grid):
         def toggle(_):
             new_grid = grid().copy()
             new_grid[i, j] = 1 - new_grid[i, j]
+            print(f"Clicked button at ({i}, {j}), new value: {new_grid[i, j]}")  # Debug print
             set_grid(new_grid)
         return toggle
-
-    # buttons = [mo.ui.button(label="a") for j in range(4)]
 
     buttons = [
         [
             mo.ui.button(
-                label="a",
+                label=f"{grid()[i,j]}",
                 on_click=make_toggle(i, j)
             ).style({
-                    "width": "30px",
-                    "height": "30px",
-                    "background-color": "white" if grid()[i, j] == 0 else "black",
-                    # "border": "1px solid black",
-                    }
-            ) for j in range(4)
+                "width": "30px",
+                "height": "30px",
+                "background-color": "white" if grid()[i, j] == 0 else "black",
+                "color": "black" if grid()[i, j] == 0 else "white"  # Ensure label is readable
+            })
+            for j in range(4)
         ]
         for i in range(4)
     ]
-    # buttons
     return (buttons,)
 
 
