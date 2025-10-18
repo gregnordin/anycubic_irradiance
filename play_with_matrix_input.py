@@ -1,75 +1,49 @@
 import marimo
 
-__generated_with = "0.17.0"
 app = marimo.App(width="medium")
 
-
 @app.cell
-def _():
+def __():
     import marimo as mo
     import numpy as np
     return mo, np
 
-
 @app.cell
-def _(mo, np):
+def __(mo, np):
     grid, set_grid = mo.state(np.zeros((4, 4), dtype=int))
-    return grid, set_grid
-
-
-@app.cell
-def _(grid, mo, set_grid):
-    def make_toggle(i, j):
-        def toggle(_):
-            new_grid = grid().copy()
-            new_grid[i, j] = 1 - new_grid[i, j]
-            print(f"Clicked button at ({i}, {j}), new value: {new_grid[i, j]}")  # Debug print
-            set_grid(new_grid)
-        return toggle
-
-    buttons = [
-        [
-            mo.ui.button(
-                label=f"{grid()[i,j]}",
-                on_click=make_toggle(i, j)
-            ).style({
-                "width": "30px",
-                "height": "30px",
-                "background-color": "white" if grid()[i, j] == 0 else "black",
-                "color": "black" if grid()[i, j] == 0 else "white"  # Ensure label is readable
-            })
-            for j in range(4)
-        ]
-        for i in range(4)
-    ]
-    return (buttons,)
-
+    debug, set_debug = mo.state("")
+    return grid, set_grid, debug, set_debug
 
 @app.cell
-def _(buttons, mo):
-    grid_ui = mo.vstack(
-        [mo.hstack(row, justify="start", gap=0) for row in buttons],
-        align="start",
-        gap=0
-    )
-    return (grid_ui,)
+def __(grid, set_grid, debug, set_debug, mo):
+    def toggle(_):
+        new_grid = grid().copy()
+        new_grid[0, 0] = 1 - new_grid[0, 0]
+        print(f"Toggled (0,0) to {new_grid[0, 0]}")  # Terminal output
+        set_debug(f"Clicked (0,0), new value: {new_grid[0, 0]}")  # In-notebook output
+        set_grid(new_grid)
 
+    button = mo.ui.button(
+        label=f"{grid()[0,0]}",
+        on_click=toggle
+    ).style({
+        "width": "30px",
+        "height": "30px",
+        "background-color": "white" if grid()[0, 0] == 0 else "black",
+        "color": "black" if grid()[0, 0] == 0 else "white"
+    })
+    return button,
 
 @app.cell
-def _(grid, grid_ui, mo):
+def __(button, grid, debug, mo):
     mo.vstack([
-        mo.md("**4x4 Grid of Squares (White: 0, Black: 1)**"),
-        grid_ui,
-        mo.md("**Current Array of Numbers:**"),
+        mo.md("**Single Button Test (White: 0, Black: 1)**"),
+        button,
+        mo.md(f"**Debug Output:** {debug()}"),
+        mo.md("**Current Array:**"),
         mo.md(f"```\n{grid()}\n```")
     ])
     return
-
-
-@app.cell
-def _():
-    return
-
 
 if __name__ == "__main__":
     app.run()
