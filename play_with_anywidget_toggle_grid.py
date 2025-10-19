@@ -118,6 +118,7 @@ def _(anywidget, traitlets):
             """Reset all squares to black (False)"""
             self.grid = [[False for _ in range(5)] for _ in range(5)]
             self.version += 1
+
     return (ToggleGrid,)
 
 
@@ -131,10 +132,10 @@ def _(np):
 @app.cell
 def _(ToggleGrid, mo):
     # Create widgets
-    rawimage0 = ToggleGrid()
-    rawimage1 = ToggleGrid()
-    rawimage2 = ToggleGrid()
-    rawimage3 = ToggleGrid()
+    rawimage0 = mo.ui.anywidget(ToggleGrid())
+    rawimage1 = mo.ui.anywidget(ToggleGrid())
+    rawimage2 = mo.ui.anywidget(ToggleGrid())
+    rawimage3 = mo.ui.anywidget(ToggleGrid())
 
     # Display it
     mo.vstack([
@@ -146,41 +147,30 @@ def _(ToggleGrid, mo):
 
 
 @app.cell
+def _():
+    # rawimage0.value["grid"]
+    return
+
+
+@app.cell
 def _(extract_np_array, mo, rawimage0):
     _ = rawimage0.version  # Track the version to trigger reactivity
     # grid_state = rawimage0.grid
     print(f"Grid updated (v{rawimage0.version}):")
 
-    mo.md(f"**Grid state:** {extract_np_array(rawimage0.grid)}")
-    return
-
-
-@app.cell
-def _():
-    # rawimage0.grid
+    mo.md(f"**Grid state:** {extract_np_array(rawimage0.value["grid"])}")
     return
 
 
 @app.cell
 def _(extract_np_array, rawimage0):
-    extract_np_array(rawimage0.grid)
+    extract_np_array(rawimage0.value["grid"])
     return
 
 
 @app.cell
-def _(rawimage3):
-    rawimage3.get_grid_state()
-    return
-
-
-@app.cell
-def _(rawimage0):
-    rawimage0.grid
-    return
-
-
-@app.cell
-def _():
+def _(extract_np_array, rawimage3):
+    extract_np_array(rawimage3.value["grid"])
     return
 
 
