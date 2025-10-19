@@ -10,11 +10,11 @@ def _(mo):
         r"""
     # Current state
     - Single grid works with `widget.get_grid_state()` returning the 2D grid array which accurately contains clicked grid tiles
+    - Position grid inside a marimo container
+    - Make 4 grids and layout as 2x2 in marimo containers
 
     # Next steps
     - make grid size a variable, n_size, and pass it into `ToggleGrid.__init__()`?
-    - Position grid inside a marimo container
-    - Make 4 grids and layout as 2x2 in marimo containers
     - Convert `widget.grid` into a numpy boolean array, then into a numpy float array in range [0,1] and multiply by 0.25
     - Plot data from 4 grids in matplotlib map of irradiance and show underneath 2x2 toggle grids array
     """
@@ -118,25 +118,42 @@ def _(anywidget, traitlets):
 
 
 @app.cell
-def _(ToggleGrid):
-    # Create the widget
-    widget = ToggleGrid()
+def _(ToggleGrid, mo):
+    # Create widgets
+    rawimage0 = ToggleGrid()
+    rawimage1 = ToggleGrid()
+    rawimage2 = ToggleGrid()
+    rawimage3 = ToggleGrid()
 
     # Display it
-    widget
+    mo.vstack([
+        mo.hstack([rawimage1, rawimage2], justify="start"),
+        mo.hstack([rawimage0, rawimage3], justify="start"),
+    ])
 
-    return (widget,)
+    return rawimage0, rawimage3
 
 
 @app.cell
-def _(widget):
-    widget.get_grid_state()
+def _(rawimage0):
+    rawimage0.get_grid_state()
     return
 
 
 @app.cell
-def _(widget):
-    widget.grid
+def _(rawimage3):
+    rawimage3.get_grid_state()
+    return
+
+
+@app.cell
+def _(rawimage0):
+    rawimage0.grid
+    return
+
+
+@app.cell
+def _():
     return
 
 
