@@ -76,6 +76,7 @@ def _(anywidget, traitlets):
                 // Create a new array to trigger change detection
                 const newGrid = grid.map(row => [...row]);
                 model.set("grid", newGrid);
+                model.set("version", model.get("version") + 1);
                 model.save_changes();
                 grid = newGrid;
               });
@@ -102,6 +103,7 @@ def _(anywidget, traitlets):
         """
     
         grid = traitlets.List([]).tag(sync=True)
+        version = traitlets.Int(0).tag(sync=True)
     
         def __init__(self):
             # Initialize with 5x5 grid of False (black)
@@ -115,6 +117,7 @@ def _(anywidget, traitlets):
         def reset(self):
             """Reset all squares to black (False)"""
             self.grid = [[False for _ in range(5)] for _ in range(5)]
+            self.version += 1
     return (ToggleGrid,)
 
 
@@ -144,7 +147,10 @@ def _(ToggleGrid, mo):
 
 @app.cell
 def _(extract_np_array, mo, rawimage0):
-    # This will update automatically
+    _ = rawimage0.version  # Track the version to trigger reactivity
+    # grid_state = rawimage0.grid
+    print(f"Grid updated (v{rawimage0.version}):")
+
     mo.md(f"**Grid state:** {extract_np_array(rawimage0.grid)}")
     return
 
