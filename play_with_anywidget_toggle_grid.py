@@ -27,7 +27,8 @@ def _():
     import marimo as mo
     import anywidget
     import traitlets
-    return anywidget, mo, traitlets
+    import numpy as np
+    return anywidget, mo, np, traitlets
 
 
 @app.cell
@@ -118,6 +119,13 @@ def _(anywidget, traitlets):
 
 
 @app.cell
+def _(np):
+    def extract_np_array(rawimage_grid, max_value=0.25):
+        return np.array(rawimage_grid).astype(float) * max_value
+    return (extract_np_array,)
+
+
+@app.cell
 def _(ToggleGrid, mo):
     # Create widgets
     rawimage0 = ToggleGrid()
@@ -135,8 +143,21 @@ def _(ToggleGrid, mo):
 
 
 @app.cell
-def _(rawimage0):
-    rawimage0.get_grid_state()
+def _(extract_np_array, mo, rawimage0):
+    # This will update automatically
+    mo.md(f"**Grid state:** {extract_np_array(rawimage0.grid)}")
+    return
+
+
+@app.cell
+def _():
+    # rawimage0.grid
+    return
+
+
+@app.cell
+def _(extract_np_array, rawimage0):
+    extract_np_array(rawimage0.grid)
     return
 
 
