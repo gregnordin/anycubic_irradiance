@@ -1,0 +1,128 @@
+import marimo
+
+__generated_with = "0.17.0"
+app = marimo.App(width="medium")
+
+
+@app.cell
+def _():
+    import marimo as mo
+    import anywidget
+    import traitlets
+    return anywidget, traitlets
+
+
+@app.cell
+def _(anywidget, traitlets):
+    class ToggleGrid(anywidget.AnyWidget):
+        _esm = """
+        function render({ model, el }) {
+          const size = 5;
+          const squareSize = 50;
+      
+          // Initialize grid state from model or create new
+          let grid = model.get("grid");
+          if (!grid || grid.length === 0) {
+            grid = Array(size).fill().map(() => Array(size).fill(false));
+            model.set("grid", grid);
+            model.save_changes();
+          }
+      
+          // Create container
+          const container = document.createElement("div");
+          container.style.display = "inline-block";
+          container.style.border = "2px solid #333";
+      
+          // Create grid
+          const gridEl = document.createElement("div");
+          gridEl.style.display = "grid";
+          gridEl.style.gridTemplateColumns = `repeat(${size}, ${squareSize}px)`;
+          gridEl.style.gap = "0";
+      
+          // Create squares
+          const squares = [];
+          for (let i = 0; i < size; i++) {
+            squares[i] = [];
+            for (let j = 0; j < size; j++) {
+              const square = document.createElement("div");
+              square.style.width = `${squareSize}px`;
+              square.style.height = `${squareSize}px`;
+              square.style.border = "1px solid #666";
+              square.style.cursor = "pointer";
+              square.style.backgroundColor = grid[i][j] ? "white" : "black";
+          
+              square.addEventListener("click", () => {
+                grid[i][j] = !grid[i][j];
+                square.style.backgroundColor = grid[i][j] ? "white" : "black";
+                model.set("grid", grid);
+                model.save_changes();
+              });
+          
+              squares[i][j] = square;
+              gridEl.appendChild(square);
+            }
+          }
+      
+          // Listen for model changes
+          model.on("change:grid", () => {
+            const newGrid = model.get("grid");
+            for (let i = 0; i < size; i++) {
+              for (let j = 0; j < size; j++) {
+                squares[i][j].style.backgroundColor = newGrid[i][j] ? "white" : "black";
+              }
+            }
+          });
+      
+          container.appendChild(gridEl);
+          el.appendChild(container);
+        }
+        export default { render };
+        """
+    
+        grid = traitlets.List([]).tag(sync=True)
+    
+        def __init__(self):
+            # Initialize with 5x5 grid of False (black)
+            self.grid = [[False for _ in range(5)] for _ in range(5)]
+            super().__init__()
+    
+        def get_grid_state(self):
+            """Return the current state of the grid"""
+            return self.grid
+    
+        def reset(self):
+            """Reset all squares to black (False)"""
+            self.grid = [[False for _ in range(5)] for _ in range(5)]
+    return (ToggleGrid,)
+
+
+@app.cell
+def _(ToggleGrid):
+    # Create the widget
+    widget = ToggleGrid()
+
+    # Display it
+    widget
+
+    return (widget,)
+
+
+@app.cell
+def _(widget):
+    widget.get_grid_state()
+    return
+
+
+@app.cell
+def _(widget):
+    widget.grid
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+if __name__ == "__main__":
+    app.run()
