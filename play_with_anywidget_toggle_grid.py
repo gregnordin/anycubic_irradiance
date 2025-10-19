@@ -12,11 +12,19 @@ def _(mo):
     - Single grid works with `widget.get_grid_state()` returning the 2D grid array which accurately contains clicked grid tiles
     - Position grid inside a marimo container
     - Make 4 grids and layout as 2x2 in marimo containers
+    - Convert `widget.grid` into a numpy boolean array, then into a numpy float array in range [0,1] and multiply by 0.25
+    - Plot data from 4 grids in matplotlib map of irradiance and show underneath 2x2 toggle grids array
 
     # Next steps
     - make grid size a variable, n_size, and pass it into `ToggleGrid.__init__()`?
-    - Convert `widget.grid` into a numpy boolean array, then into a numpy float array in range [0,1] and multiply by 0.25
-    - Plot data from 4 grids in matplotlib map of irradiance and show underneath 2x2 toggle grids array
+    - Make ToggleGrid smaller in the UI
+    - Make output plot smaller in UI
+    - Add float input widget to set micromirror array fill factor
+    - Put `mo.ui.anywidget` wrapper in a function to make it easy to create fully reactive `ToggleGrid` widget
+    - Save state to file?
+    - Load state from file?
+    - How make image of UI and irradiance map?
+
     """
     )
     return
@@ -28,7 +36,9 @@ def _():
     import anywidget
     import traitlets
     import numpy as np
-    return anywidget, mo, np, traitlets
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Rectangle
+    return Rectangle, anywidget, mo, np, plt, traitlets
 
 
 @app.cell
@@ -136,14 +146,21 @@ def _(ToggleGrid, mo):
     rawimage1 = mo.ui.anywidget(ToggleGrid())
     rawimage2 = mo.ui.anywidget(ToggleGrid())
     rawimage3 = mo.ui.anywidget(ToggleGrid())
+    return rawimage0, rawimage1, rawimage2, rawimage3
+
+
+@app.cell
+def _(create_plot, mo, rawimage0, rawimage1, rawimage2, rawimage3):
+    plot_fig, plot_ax = create_plot()
 
     # Display it
     mo.vstack([
         mo.hstack([rawimage1, rawimage2], justify="start"),
         mo.hstack([rawimage0, rawimage3], justify="start"),
+        mo.hstack([plot_ax])
     ])
 
-    return rawimage0, rawimage3
+    return
 
 
 @app.cell
@@ -153,25 +170,124 @@ def _():
 
 
 @app.cell
-def _(extract_np_array, mo, rawimage0):
-    _ = rawimage0.version  # Track the version to trigger reactivity
-    # grid_state = rawimage0.grid
-    print(f"Grid updated (v{rawimage0.version}):")
-
-    mo.md(f"**Grid state:** {extract_np_array(rawimage0.value["grid"])}")
+def _():
+    # extract_np_array(rawimage0.value["grid"])
     return
 
 
 @app.cell
-def _(extract_np_array, rawimage0):
-    extract_np_array(rawimage0.value["grid"])
+def _():
+    # extract_np_array(rawimage3.value["grid"])
     return
 
 
 @app.cell
-def _(extract_np_array, rawimage3):
-    extract_np_array(rawimage3.value["grid"])
-    return
+def _(
+    Rectangle,
+    extract_np_array,
+    np,
+    plt,
+    rawimage0,
+    rawimage1,
+    rawimage2,
+    rawimage3,
+):
+    def add_squares_to_plot(ax, n_size, matrix, shift_x, shift_y, _square_offset, _square_size):
+        for i in range(n_size):
+            for j in range(n_size):
+                # Use matrix value as both grayscale and alpha for blending
+                gray_value = matrix[i, j]
+                # Calculate bottom-left corner of the square to center it
+                x = j + _square_offset + shift_x
+                y = n_size - 1 - i + _square_offset + shift_y  # Flip y-axis to match matrix indexing
+                # Create a square (Rectangle) with white color and alpha blending
+                square = Rectangle((x, y), _square_size, _square_size, 
+                                  facecolor=(1, 1, 1), alpha=gray_value)
+                ax.add_patch(square)
+
+    def create_plot(
+        n_size=5, 
+        image0=rawimage0, 
+        image1=rawimage1, 
+        image2=rawimage2, 
+        image3=rawimage3):
+        
+        # Create a figure and axis
+        fig, ax = plt.subplots()
+    
+        # Set the background color to black
+        fig.patch.set_facecolor('black')
+        ax.set_facecolor('black')
+    
+        # Square size settings
+        full_size = 1.0  # Full cell size in matrix coordinates
+        square_size = full_size * 0.825  # 20% reduction (80% of original size)
+        offset = (full_size - square_size) / 2  # Offset to center the square
+    
+        # Draw individual squares for the original positions
+        add_squares_to_plot(
+            ax, 
+            n_size=n_size, 
+            matrix=extract_np_array(image0.value["grid"]), 
+            shift_x=0, 
+            shift_y=0, 
+            _square_offset=offset, 
+            _square_size=square_size
+        )
+    
+        # Draw individual squares for the shifted positions (y + 0.5)
+        add_squares_to_plot(
+            ax, 
+            n_size=n_size, 
+            matrix=extract_np_array(image1.value["grid"]), 
+            shift_x=0, 
+            shift_y=0.5, 
+            _square_offset=offset, 
+            _square_size=square_size
+        )
+    
+        # Draw individual squares for the shifted positions (x + 0.5)
+        add_squares_to_plot(
+            ax, 
+            n_size=n_size, 
+            matrix=extract_np_array(image3.value["grid"]), 
+            shift_x=0.5, 
+            shift_y=0, 
+            _square_offset=offset, 
+            _square_size=square_size
+        )
+    
+        # Draw individual squares for the shifted positions (x+0.5, y+0.5)
+        add_squares_to_plot(
+            ax, 
+            n_size=n_size, 
+            matrix=extract_np_array(image2.value["grid"]), 
+            shift_x=0.5, 
+            shift_y=0.5, 
+            _square_offset=offset, 
+            _square_size=square_size
+        )
+    
+        # Add red vertical and horizontal lines at integer + 0.5 positions
+        line_positions = np.arange(0, n_size + 2, 0.5)  # Positions: 0.0, 0.5, 1.0, 1.5, ...
+        ax.vlines(line_positions, ymin=0, ymax=n_size + 0.5, colors='red', linewidth=1)
+        ax.hlines(line_positions, xmin=0, xmax=n_size, colors='red', linewidth=1)
+    
+        eps = 0.02
+        # Set axis limits to show the entire grid
+        ax.set_xlim(0 - eps, n_size + eps)
+        ax.set_ylim(0 - eps, n_size + eps)
+    
+        # Remove axis ticks and labels
+        ax.set_xticks([])
+        ax.set_yticks([])
+    
+        # Ensure the plot is square
+        ax.set_aspect('equal')
+    
+        # Return figure and axes objects
+        return fig, ax
+    return (create_plot,)
 
 
 @app.cell
