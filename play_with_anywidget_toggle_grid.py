@@ -54,8 +54,11 @@ def _(anywidget, traitlets):
               square.addEventListener("click", () => {
                 grid[i][j] = !grid[i][j];
                 square.style.backgroundColor = grid[i][j] ? "white" : "black";
-                model.set("grid", grid);
+                // Create a new array to trigger change detection
+                const newGrid = grid.map(row => [...row]);
+                model.set("grid", newGrid);
                 model.save_changes();
+                grid = newGrid;
               });
           
               squares[i][j] = square;
