@@ -75,21 +75,12 @@ def _(np, plt):
 
     # Define your pattern (5x5 grid, 1 = square present, 0 = empty)
     # Example: checkerboard pattern
-    # pattern = np.array([
-    #     [1, 0, 1, 0, 1],
-    #     [0, 1, 0, 1, 0],
-    #     [1, 0, 1, 0, 1],
-    #     [0, 1, 0, 1, 0],
-    #     [1, 0, 1, 0, 1]
-    # ])
-
-    # Or try a different pattern:
     pattern = np.array([
-        [1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 1],
         [1, 0, 1, 0, 1],
-        [1, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1]
+        [0, 1, 0, 1, 0],
+        [1, 0, 1, 0, 1],
+        [0, 1, 0, 1, 0],
+        [1, 0, 1, 0, 1]
     ])
 
     # Create the base grid
@@ -97,12 +88,13 @@ def _(np, plt):
     square_size = 1.0
     rectangles_base = create_grid_pattern(grid_size, square_size, pattern)
 
-    # Create shifted grid (shift by 0.5 squares in x direction)
+    # Create shifted grids
     shift_amount = 0.5 * square_size
-    rectangles_shifted = shift_rectangles(rectangles_base, shift_x=shift_amount, shift_y=0)
+    rectangles_shifted_x = shift_rectangles(rectangles_base, shift_x=shift_amount, shift_y=0)
+    rectangles_shifted_y = shift_rectangles(rectangles_base, shift_x=0, shift_y=shift_amount)
 
-    # Combine both grids
-    all_rectangles = rectangles_base + rectangles_shifted
+    # Combine all three grids
+    all_rectangles = rectangles_base + rectangles_shifted_x + rectangles_shifted_y
 
     # Render to get overlap image
     img_size = (500, 500)
@@ -112,31 +104,57 @@ def _(np, plt):
     overlap_image = render_rectangles_direct(all_rectangles, img_size, xlim, ylim)
 
     # Visualize
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
 
     # Original pattern
     img1 = render_rectangles_direct(rectangles_base, img_size, xlim, ylim)
-    axes[0].imshow(img1, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
-    axes[0].set_title('Original Grid')
-    axes[0].set_xlabel('x')
-    axes[0].set_ylabel('y')
-    axes[0].grid(True, alpha=0.3)
+    axes[0, 0].imshow(img1, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
+    axes[0, 0].set_title('Original Grid')
+    axes[0, 0].set_xlabel('x')
+    axes[0, 0].set_ylabel('y')
+    axes[0, 0].grid(True, alpha=0.3)
 
-    # Shifted pattern
-    img2 = render_rectangles_direct(rectangles_shifted, img_size, xlim, ylim)
-    axes[1].imshow(img2, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
-    axes[1].set_title('Shifted Grid (0.5 squares in x)')
-    axes[1].set_xlabel('x')
-    axes[1].set_ylabel('y')
-    axes[1].grid(True, alpha=0.3)
+    # Shifted pattern (x direction)
+    img2 = render_rectangles_direct(rectangles_shifted_x, img_size, xlim, ylim)
+    axes[0, 1].imshow(img2, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
+    axes[0, 1].set_title('Shifted Grid (0.5 squares in x)')
+    axes[0, 1].set_xlabel('x')
+    axes[0, 1].set_ylabel('y')
+    axes[0, 1].grid(True, alpha=0.3)
 
-    # Overlap result
-    im = axes[2].imshow(overlap_image, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
-    axes[2].set_title('Overlap Count')
-    axes[2].set_xlabel('x')
-    axes[2].set_ylabel('y')
-    axes[2].grid(True, alpha=0.3)
-    plt.colorbar(im, ax=axes[2], label='Number of Overlapping Squares')
+    # Shifted pattern (y direction)
+    img3 = render_rectangles_direct(rectangles_shifted_y, img_size, xlim, ylim)
+    axes[0, 2].imshow(img3, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
+    axes[0, 2].set_title('Shifted Grid (0.5 squares in y)')
+    axes[0, 2].set_xlabel('x')
+    axes[0, 2].set_ylabel('y')
+    axes[0, 2].grid(True, alpha=0.3)
+
+    # Overlap: original + shifted x
+    img_overlap_x = render_rectangles_direct(rectangles_base + rectangles_shifted_x, img_size, xlim, ylim)
+    im1 = axes[1, 0].imshow(img_overlap_x, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
+    axes[1, 0].set_title('Original + X-Shifted')
+    axes[1, 0].set_xlabel('x')
+    axes[1, 0].set_ylabel('y')
+    axes[1, 0].grid(True, alpha=0.3)
+    plt.colorbar(im1, ax=axes[1, 0], label='Overlap Count')
+
+    # Overlap: original + shifted y
+    img_overlap_y = render_rectangles_direct(rectangles_base + rectangles_shifted_y, img_size, xlim, ylim)
+    im2 = axes[1, 1].imshow(img_overlap_y, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
+    axes[1, 1].set_title('Original + Y-Shifted')
+    axes[1, 1].set_xlabel('x')
+    axes[1, 1].set_ylabel('y')
+    axes[1, 1].grid(True, alpha=0.3)
+    plt.colorbar(im2, ax=axes[1, 1], label='Overlap Count')
+
+    # Overlap result (all three)
+    im3 = axes[1, 2].imshow(overlap_image, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
+    axes[1, 2].set_title('All Three Overlapped')
+    axes[1, 2].set_xlabel('x')
+    axes[1, 2].set_ylabel('y')
+    axes[1, 2].grid(True, alpha=0.3)
+    plt.colorbar(im3, ax=axes[1, 2], label='Overlap Count')
 
     plt.tight_layout()
     plt.show()
