@@ -15,9 +15,43 @@ def _():
 
 @app.cell
 def _(np, plt):
-    def render_rectangles_direct(rectangles, img_size=(500, 500), xlim=(0, 1), ylim=(0, 1)):
+    def create_grid_pattern(grid_size=5, square_size=1.0, pattern=None):
         """
-        Directly rasterize rectangles to count overlaps without matplotlib rendering.
+        Create a list of rectangles based on a 5x5 grid pattern.
+    
+        Parameters:
+        - grid_size: size of the grid (5 for 5x5)
+        - square_size: size of each square
+        - pattern: 2D array of 0s and 1s indicating which squares are active
+    
+        Returns:
+        - List of rectangle tuples (x, y, width, height)
+        """
+        if pattern is None:
+            # Default pattern - checkerboard
+            pattern = np.zeros((grid_size, grid_size))
+            pattern[::2, ::2] = 1
+            pattern[1::2, 1::2] = 1
+    
+        rectangles = []
+        for i in range(grid_size):
+            for j in range(grid_size):
+                if pattern[i, j] == 1:
+                    x = j * square_size
+                    y = i * square_size
+                    rectangles.append((x, y, square_size, square_size))
+    
+        return rectangles
+
+    def shift_rectangles(rectangles, shift_x=0, shift_y=0):
+        """
+        Shift all rectangles by given amounts.
+        """
+        return [(x + shift_x, y + shift_y, w, h) for x, y, w, h in rectangles]
+
+    def render_rectangles_direct(rectangles, img_size=(500, 500), xlim=(0, 5), ylim=(0, 5)):
+        """
+        Directly rasterize rectangles to count overlaps.
         """
         overlap_image = np.zeros(img_size)
     
@@ -35,29 +69,80 @@ def _(np, plt):
             y_end = max(0, min(y_end, img_size[0]))
         
             # Add 1 to the overlap count in this rectangle region
-            # Note: y-axis is typically inverted in images
             overlap_image[img_size[0] - y_end:img_size[0] - y_start, x_start:x_end] += 1
     
         return overlap_image
 
-    # Example usage
-    rectangles = [
-        (0.2, 0.2, 0.4, 0.3),
-        (0.3, 0.3, 0.4, 0.3),
-        (0.5, 0.4, 0.3, 0.4),
-        (0.4, 0.5, 0.3, 0.3),
-    ]
+    # Define your pattern (5x5 grid, 1 = square present, 0 = empty)
+    # Example: checkerboard pattern
+    # pattern = np.array([
+    #     [1, 0, 1, 0, 1],
+    #     [0, 1, 0, 1, 0],
+    #     [1, 0, 1, 0, 1],
+    #     [0, 1, 0, 1, 0],
+    #     [1, 0, 1, 0, 1]
+    # ])
 
-    overlap_image = render_rectangles_direct(rectangles)
+    # Or try a different pattern:
+    pattern = np.array([
+        [1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 1],
+        [1, 0, 1, 0, 1],
+        [1, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1]
+    ])
 
-    plt.figure(figsize=(8, 6))
-    plt.imshow(overlap_image, cmap='gray', interpolation='nearest', origin='lower')
-    plt.colorbar(label='Number of Overlapping Rectangles')
-    plt.title('Rectangle Overlap Count')
+    # Create the base grid
+    grid_size = 5
+    square_size = 1.0
+    rectangles_base = create_grid_pattern(grid_size, square_size, pattern)
+
+    # Create shifted grid (shift by 0.5 squares in x direction)
+    shift_amount = 0.5 * square_size
+    rectangles_shifted = shift_rectangles(rectangles_base, shift_x=shift_amount, shift_y=0)
+
+    # Combine both grids
+    all_rectangles = rectangles_base + rectangles_shifted
+
+    # Render to get overlap image
+    img_size = (500, 500)
+    xlim = (0, grid_size * square_size)
+    ylim = (0, grid_size * square_size)
+
+    overlap_image = render_rectangles_direct(all_rectangles, img_size, xlim, ylim)
+
+    # Visualize
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
+    # Original pattern
+    img1 = render_rectangles_direct(rectangles_base, img_size, xlim, ylim)
+    axes[0].imshow(img1, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
+    axes[0].set_title('Original Grid')
+    axes[0].set_xlabel('x')
+    axes[0].set_ylabel('y')
+    axes[0].grid(True, alpha=0.3)
+
+    # Shifted pattern
+    img2 = render_rectangles_direct(rectangles_shifted, img_size, xlim, ylim)
+    axes[1].imshow(img2, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
+    axes[1].set_title('Shifted Grid (0.5 squares in x)')
+    axes[1].set_xlabel('x')
+    axes[1].set_ylabel('y')
+    axes[1].grid(True, alpha=0.3)
+
+    # Overlap result
+    im = axes[2].imshow(overlap_image, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
+    axes[2].set_title('Overlap Count')
+    axes[2].set_xlabel('x')
+    axes[2].set_ylabel('y')
+    axes[2].grid(True, alpha=0.3)
+    plt.colorbar(im, ax=axes[2], label='Number of Overlapping Squares')
+
+    plt.tight_layout()
     plt.show()
 
-    print(f"Maximum overlap: {overlap_image.max():.0f} rectangles")
-    print(f"Unique values: {np.unique(overlap_image)}")
+    print(f"Maximum overlap: {overlap_image.max():.0f} squares")
+    print(f"Unique overlap values: {np.unique(overlap_image)}")
     return
 
 
