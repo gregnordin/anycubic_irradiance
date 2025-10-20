@@ -86,11 +86,21 @@ def _(np, plt):
         [1, 0, 0, 0, 1]
     ])
 
-    # Create the base grid with fill factor
+    # Parameters
     grid_size = 5
     square_size = 1.0  # Grid spacing
-    fill_factor_2D = 0.68  # 68% fill factor
-    fill_factor_1D = np.sqrt(fill_factor_2D)  # 68% fill factor
+    fill_factor_2D = 0.68  # 68% 2D fill factor
+    fill_factor_1D = np.sqrt(fill_factor_2D)  # 1D fill factor
+    pixels_per_square = 50  # Number of pixels per grid square
+
+    # Calculate image size based on pixels per square
+    xlim = (0, grid_size * square_size + 0.5 * square_size)
+    ylim = (0, grid_size * square_size + 0.5 * square_size)
+    img_width = int((xlim[1] - xlim[0]) * pixels_per_square)
+    img_height = int((ylim[1] - ylim[0]) * pixels_per_square)
+    img_size = (img_height, img_width)
+
+    # Create the base grid with fill factor
     rectangles_base = create_grid_pattern(grid_size, square_size, fill_factor_1D, pattern)
 
     # Create shifted grids
@@ -101,11 +111,6 @@ def _(np, plt):
 
     # Combine all four grids
     all_rectangles = rectangles_base + rectangles_shifted_x + rectangles_shifted_y + rectangles_shifted_xy
-
-    # Extended plot limits by 0.5 squares in positive x and y
-    img_size = (550, 550)  # Increase image size proportionally
-    xlim = (0, grid_size * square_size + 0.5 * square_size)
-    ylim = (0, grid_size * square_size + 0.5 * square_size)
 
     overlap_image = render_rectangles_direct(all_rectangles, img_size, xlim, ylim)
 
@@ -176,6 +181,8 @@ def _(np, plt):
     print(f"Number of active squares in pattern: {np.sum(pattern)}")
     print(f"Grid spacing: {square_size}, Actual square size: {square_size * fill_factor_1D:.3f}")
     print(f"2D fill factor: {fill_factor_2D*100:.0f}%")
+    print(f"Pixels per grid square: {pixels_per_square}")
+    print(f"Image size: {img_size} ({img_width} x {img_height} pixels)")
     return
 
 
