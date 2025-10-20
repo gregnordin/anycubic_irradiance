@@ -77,17 +77,27 @@ def _(np, plt):
     
         return overlap_image
 
-    # Define your pattern (5x5 grid, 1 = square present, 0 = empty)
+    # # Define your pattern (5x5 grid, 1 = square present, 0 = empty)
+    # pattern = np.array([
+    #     [1, 0, 0, 0, 1],
+    #     [0, 0, 0, 0, 0],
+    #     [0, 0, 1, 0, 0],
+    #     [0, 0, 0, 0, 0],
+    #     [1, 0, 0, 0, 1]
+    # ])
+    # Define your pattern (7x7 grid, 1 = square present, 0 = empty)
     pattern = np.array([
-        [1, 0, 0, 0, 1],
-        [0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0],
-        [1, 0, 0, 0, 1]
+        [1, 0, 0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
     ])
 
     # Parameters
-    grid_size = 5
+    grid_size = 7
     square_size = 1.0  # Grid spacing
     fill_factor_2D = 0.68  # 68% 2D fill factor
     fill_factor_1D = np.sqrt(fill_factor_2D)  # 1D fill factor
