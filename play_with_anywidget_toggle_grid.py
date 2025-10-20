@@ -16,6 +16,7 @@ def _(mo):
     - Plot data from 4 grids in matplotlib map of irradiance and show underneath 2x2 toggle grids array
 
     # Next steps
+    - Convert overlapping rectangular patches into an image and map to grayscale [threshold, 1]
     - make grid size a variable, n_size, and pass it into `ToggleGrid.__init__()`?
     - Input to set threshold value for irradiance map
     - Make ToggleGrid smaller in the UI
