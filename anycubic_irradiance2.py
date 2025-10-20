@@ -69,7 +69,8 @@ def _(np, plt):
             y_end = max(0, min(y_end, img_size[0]))
         
             # Add 1 to the overlap count in this rectangle region
-            overlap_image[img_size[0] - y_end:img_size[0] - y_start, x_start:x_end] += 1
+            # Note: No y-axis inversion here - we'll handle it in imshow
+            overlap_image[y_start:y_end, x_start:x_end] += 1
     
         return overlap_image
 
@@ -96,10 +97,10 @@ def _(np, plt):
     # Combine all four grids
     all_rectangles = rectangles_base + rectangles_shifted_x + rectangles_shifted_y + rectangles_shifted_xy
 
-    # Render to get overlap image
-    img_size = (500, 500)
-    xlim = (0, grid_size * square_size)
-    ylim = (0, grid_size * square_size)
+    # Extended plot limits by 0.5 squares in positive x and y
+    img_size = (550, 550)  # Increase image size proportionally
+    xlim = (0, grid_size * square_size + 0.5 * square_size)
+    ylim = (0, grid_size * square_size + 0.5 * square_size)
 
     overlap_image = render_rectangles_direct(all_rectangles, img_size, xlim, ylim)
 
@@ -108,52 +109,58 @@ def _(np, plt):
 
     # Original pattern
     img1 = render_rectangles_direct(rectangles_base, img_size, xlim, ylim)
-    axes[0, 0].imshow(img1, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
+    axes[0, 0].imshow(img1, cmap='gray', interpolation='nearest', origin='lower', extent=[xlim[0], xlim[1], ylim[0], ylim[1]])
     axes[0, 0].set_title('Original Grid')
     axes[0, 0].set_xlabel('x')
     axes[0, 0].set_ylabel('y')
     axes[0, 0].grid(True, alpha=0.3)
+    axes[0, 0].set_aspect('equal')
 
     # Shifted pattern (x direction)
     img2 = render_rectangles_direct(rectangles_shifted_x, img_size, xlim, ylim)
-    axes[0, 1].imshow(img2, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
-    axes[0, 1].set_title('Shifted Grid (0.5 squares in x)')
+    axes[0, 1].imshow(img2, cmap='gray', interpolation='nearest', origin='lower', extent=[xlim[0], xlim[1], ylim[0], ylim[1]])
+    axes[0, 1].set_title('Shifted Grid (0.5 squares in +x)')
     axes[0, 1].set_xlabel('x')
     axes[0, 1].set_ylabel('y')
     axes[0, 1].grid(True, alpha=0.3)
+    axes[0, 1].set_aspect('equal')
 
     # Shifted pattern (y direction)
     img3 = render_rectangles_direct(rectangles_shifted_y, img_size, xlim, ylim)
-    axes[0, 2].imshow(img3, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
-    axes[0, 2].set_title('Shifted Grid (0.5 squares in y)')
+    axes[0, 2].imshow(img3, cmap='gray', interpolation='nearest', origin='lower', extent=[xlim[0], xlim[1], ylim[0], ylim[1]])
+    axes[0, 2].set_title('Shifted Grid (0.5 squares in +y)')
     axes[0, 2].set_xlabel('x')
     axes[0, 2].set_ylabel('y')
     axes[0, 2].grid(True, alpha=0.3)
+    axes[0, 2].set_aspect('equal')
 
     # Shifted pattern (x and y direction)
     img4 = render_rectangles_direct(rectangles_shifted_xy, img_size, xlim, ylim)
-    axes[1, 0].imshow(img4, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
-    axes[1, 0].set_title('Shifted Grid (0.5 squares in x and y)')
+    axes[1, 0].imshow(img4, cmap='gray', interpolation='nearest', origin='lower', extent=[xlim[0], xlim[1], ylim[0], ylim[1]])
+    axes[1, 0].set_title('Shifted Grid (0.5 squares in +x and +y)')
     axes[1, 0].set_xlabel('x')
     axes[1, 0].set_ylabel('y')
     axes[1, 0].grid(True, alpha=0.3)
+    axes[1, 0].set_aspect('equal')
 
     # Overlap: all patterns combined (excluding diagonal shift)
     img_overlap_3 = render_rectangles_direct(rectangles_base + rectangles_shifted_x + rectangles_shifted_y, 
                                              img_size, xlim, ylim)
-    im1 = axes[1, 1].imshow(img_overlap_3, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
+    im1 = axes[1, 1].imshow(img_overlap_3, cmap='gray', interpolation='nearest', origin='lower', extent=[xlim[0], xlim[1], ylim[0], ylim[1]])
     axes[1, 1].set_title('Original + X-Shifted + Y-Shifted')
     axes[1, 1].set_xlabel('x')
     axes[1, 1].set_ylabel('y')
     axes[1, 1].grid(True, alpha=0.3)
+    axes[1, 1].set_aspect('equal')
     plt.colorbar(im1, ax=axes[1, 1], label='Overlap Count')
 
     # Overlap result (all four)
-    im2 = axes[1, 2].imshow(overlap_image, cmap='gray', interpolation='nearest', origin='lower', extent=[0, 5, 0, 5])
+    im2 = axes[1, 2].imshow(overlap_image, cmap='gray', interpolation='nearest', origin='lower', extent=[xlim[0], xlim[1], ylim[0], ylim[1]])
     axes[1, 2].set_title('All Four Patterns Overlapped')
     axes[1, 2].set_xlabel('x')
     axes[1, 2].set_ylabel('y')
     axes[1, 2].grid(True, alpha=0.3)
+    axes[1, 2].set_aspect('equal')
     plt.colorbar(im2, ax=axes[1, 2], label='Overlap Count')
 
     plt.tight_layout()
@@ -162,6 +169,7 @@ def _(np, plt):
     print(f"Maximum overlap: {overlap_image.max():.0f} squares")
     print(f"Unique overlap values: {np.unique(overlap_image)}")
     print(f"Number of active squares in pattern: {np.sum(pattern)}")
+    print(f"Plot extends from x={xlim[0]} to x={xlim[1]}, y={ylim[0]} to y={ylim[1]}")
     return
 
 
