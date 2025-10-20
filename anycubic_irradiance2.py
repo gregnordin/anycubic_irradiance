@@ -77,8 +77,8 @@ def _(np, plt):
     # Define your pattern (5x5 grid, 1 = square present, 0 = empty)
     pattern = np.array([
         [1, 0, 0, 0, 1],
-        [0, 0, 0, 0, 0],
         [0, 0, 1, 0, 0],
+        [0, 0, 1, 1, 0],
         [0, 0, 0, 0, 0],
         [1, 0, 0, 0, 1]
     ])
