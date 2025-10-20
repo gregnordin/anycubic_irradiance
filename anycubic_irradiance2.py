@@ -15,13 +15,14 @@ def _():
 
 @app.cell
 def _(np, plt):
-    def create_grid_pattern(grid_size=5, square_size=1.0, pattern=None):
+    def create_grid_pattern(grid_size=5, square_size=1.0, fill_factor=1.0, pattern=None):
         """
         Create a list of rectangles based on a 5x5 grid pattern.
     
         Parameters:
         - grid_size: size of the grid (5 for 5x5)
-        - square_size: size of each square
+        - square_size: size of each grid cell (spacing between squares)
+        - fill_factor: 1D fraction of the grid cell that is filled (0 to 1)
         - pattern: 2D array of 0s and 1s indicating which squares are active
     
         Returns:
@@ -34,12 +35,15 @@ def _(np, plt):
             pattern[1::2, 1::2] = 1
     
         rectangles = []
+        actual_square_size = square_size * fill_factor
+        offset = (square_size - actual_square_size) / 2  # Center the square in the grid cell
+    
         for i in range(grid_size):
             for j in range(grid_size):
                 if pattern[i, j] == 1:
-                    x = j * square_size
-                    y = i * square_size
-                    rectangles.append((x, y, square_size, square_size))
+                    x = j * square_size + offset
+                    y = i * square_size + offset
+                    rectangles.append((x, y, actual_square_size, actual_square_size))
     
         return rectangles
 
@@ -69,7 +73,6 @@ def _(np, plt):
             y_end = max(0, min(y_end, img_size[0]))
         
             # Add 1 to the overlap count in this rectangle region
-            # Note: No y-axis inversion here - we'll handle it in imshow
             overlap_image[y_start:y_end, x_start:x_end] += 1
     
         return overlap_image
@@ -77,16 +80,18 @@ def _(np, plt):
     # Define your pattern (5x5 grid, 1 = square present, 0 = empty)
     pattern = np.array([
         [1, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0],
         [0, 0, 1, 0, 0],
-        [0, 0, 1, 1, 0],
         [0, 0, 0, 0, 0],
         [1, 0, 0, 0, 1]
     ])
 
-    # Create the base grid
+    # Create the base grid with fill factor
     grid_size = 5
-    square_size = 1.0
-    rectangles_base = create_grid_pattern(grid_size, square_size, pattern)
+    square_size = 1.0  # Grid spacing
+    fill_factor_2D = 0.68  # 68% fill factor
+    fill_factor_1D = np.sqrt(fill_factor_2D)  # 68% fill factor
+    rectangles_base = create_grid_pattern(grid_size, square_size, fill_factor_1D, pattern)
 
     # Create shifted grids
     shift_amount = 0.5 * square_size
@@ -110,7 +115,7 @@ def _(np, plt):
     # Original pattern
     img1 = render_rectangles_direct(rectangles_base, img_size, xlim, ylim)
     axes[0, 0].imshow(img1, cmap='gray', interpolation='nearest', origin='lower', extent=[xlim[0], xlim[1], ylim[0], ylim[1]])
-    axes[0, 0].set_title('Original Grid')
+    axes[0, 0].set_title(f'Original Grid (fill={fill_factor_2D*100:.0f}%)')
     axes[0, 0].set_xlabel('x')
     axes[0, 0].set_ylabel('y')
     axes[0, 0].grid(True, alpha=0.3)
@@ -169,7 +174,8 @@ def _(np, plt):
     print(f"Maximum overlap: {overlap_image.max():.0f} squares")
     print(f"Unique overlap values: {np.unique(overlap_image)}")
     print(f"Number of active squares in pattern: {np.sum(pattern)}")
-    print(f"Plot extends from x={xlim[0]} to x={xlim[1]}, y={ylim[0]} to y={ylim[1]}")
+    print(f"Grid spacing: {square_size}, Actual square size: {square_size * fill_factor_1D:.3f}")
+    print(f"2D fill factor: {fill_factor_2D*100:.0f}%")
     return
 
 
