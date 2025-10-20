@@ -17,6 +17,7 @@ def _(mo):
 
     # Next steps
     - make grid size a variable, n_size, and pass it into `ToggleGrid.__init__()`?
+    - Input to set threshold value for irradiance map
     - Make ToggleGrid smaller in the UI
     - Make output plot smaller in UI
     - Add float input widget to set micromirror array fill factor
@@ -146,18 +147,20 @@ def _(ToggleGrid, mo):
     rawimage1 = mo.ui.anywidget(ToggleGrid())
     rawimage2 = mo.ui.anywidget(ToggleGrid())
     rawimage3 = mo.ui.anywidget(ToggleGrid())
+
+    irradiance_threshold = mo.ui.dropdown(options=[0, 0.3, 0.6, 0.8], label="Irradiance threshold", value=0)
     return rawimage0, rawimage1, rawimage2, rawimage3
 
 
 @app.cell
 def _(create_plot, mo, rawimage0, rawimage1, rawimage2, rawimage3):
-    plot_fig, plot_ax = create_plot()
+    plot_fig, plot_ax = create_plot() #irradiance_threshold.value)
 
     # Display it
     mo.vstack([
         mo.hstack([rawimage1, rawimage2], justify="start"),
         mo.hstack([rawimage0, rawimage3], justify="start"),
-        mo.hstack([plot_ax])
+        mo.hstack([plot_ax]) #, irradiance_threshold], justify="start")
     ])
 
     return
@@ -196,7 +199,7 @@ def _(
         for i in range(n_size):
             for j in range(n_size):
                 # Use matrix value as both grayscale and alpha for blending
-                gray_value = matrix[i, j]
+                gray_value = matrix[i, j] # * 2
                 # Calculate bottom-left corner of the square to center it
                 x = j + _square_offset + shift_x
                 y = n_size - 1 - i + _square_offset + shift_y  # Flip y-axis to match matrix indexing
@@ -206,6 +209,7 @@ def _(
                 ax.add_patch(square)
 
     def create_plot(
+        # threshold=0,
         n_size=5, 
         image0=rawimage0, 
         image1=rawimage1, 
