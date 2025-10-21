@@ -18,16 +18,16 @@ def _(mo):
     - Input to set threshold value for irradiance map
     - Add buttons to turn all pixels on and all pixels off
     - Add float input widget to set micromirror array fill factor
+    - Add labels to 4 input 102 um images to indicate shifts?
+    - Reduce size of 4 input images
 
     # Next steps
     - Show 51 um grid lines in final image?
-    - Add labels to 4 input 102 um images to indicate shifts?
     - make grid size a variable, n_size, and pass it into `ToggleGrid.__init__()`?
     - Put `mo.ui.anywidget` wrapper in a function to make it easy to create fully reactive `ToggleGrid` widget
     - Save state to file?
     - Load state from file?
     - How make image of UI and irradiance map?
-
     """
     )
     return
@@ -51,8 +51,8 @@ def _(anywidget, traitlets):
         _esm = """
         function render({ model, el }) {
           const size = 5;
-          const squareSize = 50;
-      
+          const squareSize = 40;
+
           // Initialize grid state from model or create new
           let grid = model.get("grid");
           if (!grid || grid.length === 0) {
@@ -60,18 +60,18 @@ def _(anywidget, traitlets):
             model.set("grid", grid);
             model.save_changes();
           }
-      
+
           // Create container
           const container = document.createElement("div");
           container.style.display = "inline-block";
           container.style.border = "2px solid #333";
-      
+
           // Create grid
           const gridEl = document.createElement("div");
           gridEl.style.display = "grid";
           gridEl.style.gridTemplateColumns = `repeat(${size}, ${squareSize}px)`;
           gridEl.style.gap = "0";
-      
+
           // Create squares
           const squares = [];
           for (let i = 0; i < size; i++) {
@@ -83,7 +83,7 @@ def _(anywidget, traitlets):
               square.style.border = "1px solid #666";
               square.style.cursor = "pointer";
               square.style.backgroundColor = grid[i][j] ? "white" : "black";
-          
+
               square.addEventListener("click", () => {
                 grid[i][j] = !grid[i][j];
                 square.style.backgroundColor = grid[i][j] ? "white" : "black";
@@ -93,19 +93,19 @@ def _(anywidget, traitlets):
                 model.save_changes();
                 grid = newGrid;
               });
-          
+
               squares[i][j] = square;
               gridEl.appendChild(square);
             }
           }
-      
+
           // Listen for reset_trigger changes
           model.on("change:reset_trigger", () => {
             // Reset the grid
             grid = Array(size).fill().map(() => Array(size).fill(false));
             model.set("grid", grid);
             model.save_changes();
-        
+
             // Update visual
             for (let i = 0; i < size; i++) {
               for (let j = 0; j < size; j++) {
@@ -113,14 +113,14 @@ def _(anywidget, traitlets):
               }
             }
           });
-      
+
           // Listen for set_all_trigger changes
           model.on("change:set_all_trigger", () => {
             // Set all to true
             grid = Array(size).fill().map(() => Array(size).fill(true));
             model.set("grid", grid);
             model.save_changes();
-        
+
             // Update visual
             for (let i = 0; i < size; i++) {
               for (let j = 0; j < size; j++) {
@@ -128,7 +128,7 @@ def _(anywidget, traitlets):
               }
             }
           });
-      
+
           // Listen for model changes
           model.on("change:grid", () => {
             const newGrid = model.get("grid");
@@ -139,22 +139,21 @@ def _(anywidget, traitlets):
               }
             }
           });
-      
+
           container.appendChild(gridEl);
           el.appendChild(container);
         }
         export default { render };
         """
-    
+
         grid = traitlets.List([]).tag(sync=True)
         reset_trigger = traitlets.Int(0).tag(sync=True)
         set_all_trigger = traitlets.Int(0).tag(sync=True)
-    
+
         def __init__(self):
             # Initialize with 5x5 grid of False (black)
             self.grid = [[False for _ in range(5)] for _ in range(5)]
             super().__init__()
-
 
     return (ToggleGrid,)
 
@@ -225,7 +224,10 @@ def _(
 
     # Display it
     mo.vstack([
+        mo.md("### Individual 102 &mu;m Pixel Images"),
+        mo.md("Shift +y" + "&nbsp;"*38 +"Shift +xy"),
         mo.hstack([rawimage1, rawimage2], justify="start"),
+        mo.md("Unshifted" + "&nbsp;"*37 +"Shift +x"),
         mo.hstack([rawimage0, rawimage3], justify="start"),
         mo.hstack([plot_ax, 
                    mo.vstack(
@@ -237,7 +239,6 @@ def _(
                        ], 
                        justify="center")], justify="start")
     ])
-
     return
 
 
@@ -323,7 +324,6 @@ def _(
     all_rectangles = rectangles_unshifted + rectangles_shifted_x + rectangles_shifted_y + rectangles_shifted_xy
 
     overlap_image = render_rectangles_direct(all_rectangles, img_size, xlim, ylim)
-
     return overlap_image, xlim, ylim
 
 
@@ -352,8 +352,8 @@ def _(plt):
             vmax=4
         )
         ax.set_title('All Four Patterns Overlapped')
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
+        ax.set_xlabel('x (102 $\mu$m pixels)')
+        ax.set_ylabel('y (102 $\mu$m pixels)')
         ax.grid(True, alpha=0.3)
         ax.set_aspect('equal')
         return fig, ax
@@ -365,13 +365,13 @@ def _(np):
     def create_grid_pattern(grid_size=5, square_size=1.0, fill_factor=1.0, pattern=None):
         """
         Create a list of rectangles based on a 5x5 grid pattern.
-    
+
         Parameters:
         - grid_size: size of the grid (5 for 5x5)
         - square_size: size of each grid cell (spacing between squares)
         - fill_factor: 1D fraction of the grid cell that is filled (0 to 1)
         - pattern: 2D array of 0s and 1s indicating which squares are active
-    
+
         Returns:
         - List of rectangle tuples (x, y, width, height)
         """
@@ -380,18 +380,18 @@ def _(np):
             pattern = np.zeros((grid_size, grid_size))
             pattern[::2, ::2] = 1
             pattern[1::2, 1::2] = 1
-    
+
         rectangles = []
         actual_square_size = square_size * fill_factor
         offset = (square_size - actual_square_size) / 2  # Center the square in the grid cell
-    
+
         for i in range(grid_size):
             for j in range(grid_size):
                 if pattern[i, j] == 1:
                     x = j * square_size + offset
                     y = i * square_size + offset
                     rectangles.append((x, y, actual_square_size, actual_square_size))
-    
+
         return rectangles
 
     def shift_rectangles(rectangles, shift_x=0, shift_y=0):
@@ -405,25 +405,24 @@ def _(np):
         Directly rasterize rectangles to count overlaps.
         """
         overlap_image = np.zeros(img_size)
-    
+
         for x, y, width, height in rectangles:
             # Convert rectangle coordinates to pixel coordinates
             x_start = int((x - xlim[0]) / (xlim[1] - xlim[0]) * img_size[1])
             x_end = int((x + width - xlim[0]) / (xlim[1] - xlim[0]) * img_size[1])
             y_start = int((y - ylim[0]) / (ylim[1] - ylim[0]) * img_size[0])
             y_end = int((y + height - ylim[0]) / (ylim[1] - ylim[0]) * img_size[0])
-        
+
             # Clamp to image boundaries
             x_start = max(0, min(x_start, img_size[1]))
             x_end = max(0, min(x_end, img_size[1]))
             y_start = max(0, min(y_start, img_size[0]))
             y_end = max(0, min(y_end, img_size[0]))
-        
+
             # Add 1 to the overlap count in this rectangle region
             overlap_image[y_start:y_end, x_start:x_end] += 1
-    
-        return overlap_image
 
+        return overlap_image
     return create_grid_pattern, render_rectangles_direct, shift_rectangles
 
 
