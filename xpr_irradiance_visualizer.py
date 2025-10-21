@@ -8,9 +8,9 @@ app = marimo.App(width="medium")
 def _(mo):
     mo.md(
         r"""
-    ## Calculate Irradiance for TI XPR Projector
+    # Calculate Irradiance for TI XPR Projector
 
-    ### Basic Idea
+    ## Basic Idea
 
     See [Understanding the XPR Technology](https://awolvision.com/blogs/awol-vision-blog/understanding-xpr-technology-for-4k-dlp-projectors) and the image below for an explanation of how XPR works. In summary, the technique is intended to double the apparent resolution of a projected image compared to the actual physical resolution of the projected micromirror array. For example, our Anycubic DLP 3D printer projects an image with a 102 &mu;m pixel pitch. However, the claimed resolution is 51 &mu;m, which is achieved by rapidly projecting four sequential 102 &mu;m pixel images to construct each 51 &mu;m image. As shown in the right panel of the image below. The four-image sequence is
 
@@ -33,7 +33,7 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
-    ### Visualization
+    ## Visualization
 
     Below are four 5x5 arrays of 102 &mu;m pixels, one for each of the XPR shifts, and the output image created by their temporal overlap.
     """

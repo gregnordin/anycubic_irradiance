@@ -1,5 +1,7 @@
 `play_with_anywidget_toggle_grid.py`
 
+To run as app: `uv run marimo run play_with_anywidget_toggle_grid.py`
+
 ### Current state
 - Single grid works with `widget.get_grid_state()` returning the 2D grid array which accurately contains clicked grid tiles
 - Position grid inside a marimo container
@@ -20,3 +22,4 @@
 - Save state to file?
 - Load state from file?
 - How make image of UI and irradiance map?
+
