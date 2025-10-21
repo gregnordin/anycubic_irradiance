@@ -17,12 +17,12 @@ def _(mo):
     - Convert overlapping rectangular patches into an image and map to grayscale [threshold, 1]
     - Input to set threshold value for irradiance map
     - Add buttons to turn all pixels on and all pixels off
+    - Add float input widget to set micromirror array fill factor
 
     # Next steps
-    - Add float input widget to set micromirror array fill factor
+    - Show 51 um grid lines in final image?
+    - Add labels to 4 input 102 um images to indicate shifts?
     - make grid size a variable, n_size, and pass it into `ToggleGrid.__init__()`?
-    - Make ToggleGrid smaller in the UI
-    - Make output plot smaller in UI
     - Put `mo.ui.anywidget` wrapper in a function to make it easy to create fully reactive `ToggleGrid` widget
     - Save state to file?
     - Load state from file?
@@ -225,10 +225,17 @@ def _(
 
     # Display it
     mo.vstack([
-        mo.hstack([set_all_to_black, set_all_to_white, fill_factor_2D], justify="start"),
         mo.hstack([rawimage1, rawimage2], justify="start"),
         mo.hstack([rawimage0, rawimage3], justify="start"),
-        mo.hstack([plot_ax, irradiance_threshold], justify="start")
+        mo.hstack([plot_ax, 
+                   mo.vstack(
+                       [
+                           set_all_to_black, 
+                           set_all_to_white, 
+                           fill_factor_2D,
+                           irradiance_threshold, 
+                       ], 
+                       justify="center")], justify="start")
     ])
 
     return
