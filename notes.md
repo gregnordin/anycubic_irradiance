@@ -1,6 +1,7 @@
 `play_with_anywidget_toggle_grid.py`
 
-To run as app: `uv run marimo run play_with_anywidget_toggle_grid.py`
+To run as app: `uv run marimo run xpr_irradiance_visualizer.py`
+To run in edit mode: `uv run marimo edit xpr_irradiance_visualizer.py`
 
 ### Current state
 - Single grid works with `widget.get_grid_state()` returning the 2D grid array which accurately contains clicked grid tiles

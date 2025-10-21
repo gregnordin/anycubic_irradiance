@@ -12,7 +12,9 @@ def _(mo):
 
     ## Basic Idea
 
-    See [Understanding the XPR Technology](https://awolvision.com/blogs/awol-vision-blog/understanding-xpr-technology-for-4k-dlp-projectors) and the image below for an explanation of how XPR works. In summary, the technique is intended to double the apparent resolution of a projected image compared to the actual physical resolution of the projected micromirror array. For example, our Anycubic DLP 3D printer projects an image with a 102 &mu;m pixel pitch. However, the claimed resolution is 51 &mu;m, which is achieved by rapidly projecting four sequential 102 &mu;m pixel images to construct each 51 &mu;m image. As shown in the right panel of the image below. The four-image sequence is
+    See [Understanding the XPR Technology](https://awolvision.com/blogs/awol-vision-blog/understanding-xpr-technology-for-4k-dlp-projectors) and the image below for an explanation of how XPR works. In summary, the technique is intended to double the apparent resolution of a projected image compared to the actual physical resolution of the projected micromirror array. For example, our Anycubic DLP 3D printer projects an image with a 102 &mu;m pixel pitch. However, the claimed resolution is 51 &mu;m, which is achieved by rapidly projecting four sequential 102 &mu;m pixel images to construct a 51 &mu;m image. The 51 &mu;m image is considered to be the integration over time of the 4 sequential images. This makes sense if the temporal sequencing is faster than the physical system can respond, such as the human visual system when viewing a video. However, it does not mean that no light is projected into every 51 &mu;m pixel that is supposed to be dark, which can be seen by playing with the visualization on this page. 
+
+    As shown in the image below, the four-image sequence is achieved by rapidly rotating a tilted glass window.
 
     1. Unshifted image
     2. Shifted up by 1/2 pixel (i.e., 1/2 of a 102 &mu;m pixel)
