@@ -14,14 +14,14 @@ def _(mo):
     - Make 4 grids and layout as 2x2 in marimo containers
     - Convert `widget.grid` into a numpy boolean array, then into a numpy float array in range [0,1] and multiply by 0.25
     - Plot data from 4 grids in matplotlib map of irradiance and show underneath 2x2 toggle grids array
+    - Convert overlapping rectangular patches into an image and map to grayscale [threshold, 1]
+    - Input to set threshold value for irradiance map
 
     # Next steps
-    - Convert overlapping rectangular patches into an image and map to grayscale [threshold, 1]
+    - Add float input widget to set micromirror array fill factor
     - make grid size a variable, n_size, and pass it into `ToggleGrid.__init__()`?
-    - Input to set threshold value for irradiance map
     - Make ToggleGrid smaller in the UI
     - Make output plot smaller in UI
-    - Add float input widget to set micromirror array fill factor
     - Put `mo.ui.anywidget` wrapper in a function to make it easy to create fully reactive `ToggleGrid` widget
     - Save state to file?
     - Load state from file?
@@ -41,7 +41,7 @@ def _():
     import numpy as np
     import matplotlib.pyplot as plt
     from matplotlib.patches import Rectangle
-    return Rectangle, anywidget, mo, np, plt, traitlets
+    return anywidget, mo, np, plt, traitlets
 
 
 @app.cell
@@ -89,7 +89,6 @@ def _(anywidget, traitlets):
                 // Create a new array to trigger change detection
                 const newGrid = grid.map(row => [...row]);
                 model.set("grid", newGrid);
-                model.set("version", model.get("version") + 1);
                 model.save_changes();
                 grid = newGrid;
               });
@@ -99,9 +98,25 @@ def _(anywidget, traitlets):
             }
           }
       
+          // Listen for reset_trigger changes
+          model.on("change:reset_trigger", () => {
+            // Reset the grid
+            grid = Array(size).fill().map(() => Array(size).fill(false));
+            model.set("grid", grid);
+            model.save_changes();
+        
+            // Update visual
+            for (let i = 0; i < size; i++) {
+              for (let j = 0; j < size; j++) {
+                squares[i][j].style.backgroundColor = "black";
+              }
+            }
+          });
+      
           // Listen for model changes
           model.on("change:grid", () => {
             const newGrid = model.get("grid");
+            grid = newGrid;
             for (let i = 0; i < size; i++) {
               for (let j = 0; j < size; j++) {
                 squares[i][j].style.backgroundColor = newGrid[i][j] ? "white" : "black";
@@ -116,21 +131,13 @@ def _(anywidget, traitlets):
         """
     
         grid = traitlets.List([]).tag(sync=True)
-        version = traitlets.Int(0).tag(sync=True)
+        reset_trigger = traitlets.Int(0).tag(sync=True)
     
         def __init__(self):
             # Initialize with 5x5 grid of False (black)
             self.grid = [[False for _ in range(5)] for _ in range(5)]
             super().__init__()
-    
-        def get_grid_state(self):
-            """Return the current state of the grid"""
-            return self.grid
-    
-        def reset(self):
-            """Reset all squares to black (False)"""
-            self.grid = [[False for _ in range(5)] for _ in range(5)]
-            self.version += 1
+
 
     return (ToggleGrid,)
 
@@ -138,49 +145,72 @@ def _(anywidget, traitlets):
 @app.cell
 def _(ToggleGrid, mo):
     # Create widgets
-    rawimage0 = mo.ui.anywidget(ToggleGrid())
-    rawimage1 = mo.ui.anywidget(ToggleGrid())
-    rawimage2 = mo.ui.anywidget(ToggleGrid())
-    rawimage3 = mo.ui.anywidget(ToggleGrid())
+    _toggle_grid_instance0 = ToggleGrid()
+    rawimage0 = mo.ui.anywidget(_toggle_grid_instance0)
+    _toggle_grid_instance1 = ToggleGrid()
+    rawimage1 = mo.ui.anywidget(_toggle_grid_instance1)
+    _toggle_grid_instance2 = ToggleGrid()
+    rawimage2 = mo.ui.anywidget(_toggle_grid_instance2)
+    _toggle_grid_instance3 = ToggleGrid()
+    rawimage3 = mo.ui.anywidget(_toggle_grid_instance3)
 
-    irradiance_threshold = mo.ui.dropdown(options=[0, 0.3, 0.6, 0.8], label="Irradiance threshold", value=0)
-    return rawimage0, rawimage1, rawimage2, rawimage3
+    def reset_grid():
+        """Call this function to reset the grid"""
+        _toggle_grid_instance0.reset_trigger += 1
+        _toggle_grid_instance1.reset_trigger += 1
+        _toggle_grid_instance2.reset_trigger += 1
+        _toggle_grid_instance3.reset_trigger += 1
+
+    set_all_to_black = mo.ui.button(label="Turn off all pixels", on_click=lambda _: reset_grid())
+
+    irradiance_threshold = mo.ui.dropdown(options=["1 or more", "2 or more", "3 or more", "4"], label="Threshold: overlapping images", value="1 or more")
+    return (
+        irradiance_threshold,
+        rawimage0,
+        rawimage1,
+        rawimage2,
+        rawimage3,
+        set_all_to_black,
+    )
+
+
+@app.cell
+def _(rawimage0):
+    rawimage0.value["grid"]
+    return
 
 
 @app.cell
 def _(
-    create_irradiance_pattern,
+    irradiance_threshold,
     mo,
     overlap_image,
+    plot_irradiance_pattern,
     rawimage0,
     rawimage1,
     rawimage2,
     rawimage3,
+    set_all_to_black,
     xlim,
     ylim,
 ):
     # plot_fig, plot_ax = create_plot() #irradiance_threshold.value)
-    plot_fig, plot_ax = create_irradiance_pattern(overlap_image, xlim, ylim)
+    plot_fig, plot_ax = plot_irradiance_pattern(overlap_image, xlim, ylim, irradiance_threshold.value)
 
     # Display it
     mo.vstack([
+        mo.hstack([set_all_to_black], justify="start"),
         mo.hstack([rawimage1, rawimage2], justify="start"),
         mo.hstack([rawimage0, rawimage3], justify="start"),
-        mo.hstack([plot_ax]) #, irradiance_threshold], justify="start")
+        mo.hstack([plot_ax, irradiance_threshold], justify="start")
     ])
 
     return
 
 
 @app.cell
-def _():
-    # rawimage0.value["grid"]
-    return
-
-
-@app.cell
-def _():
-    # extract_np_array(rawimage0.value["grid"])
+def _(irradiance_threshold):
+    irradiance_threshold.value
     return
 
 
@@ -265,34 +295,35 @@ def _(
 
 @app.cell
 def _(plt):
-    def create_irradiance_pattern(img_data, xlim, ylim):
+    def plot_irradiance_pattern(img_data, xlim, ylim, threshold):
+        eps = 1e-1
+        if threshold == "1 or more":
+            vmin = 0
+        elif threshold == "2 or more":
+            vmin = 1 + eps
+        elif threshold == "3 or more":
+            vmin = 2 + eps
+        elif threshold == "4":
+            vmin = 3 + eps
+        else:
+            raise ValueError(f"Incorrect threshold: {threshold}")
         fig, ax = plt.subplots() # 2, 3, figsize=(15, 10))
-        img = ax.imshow(img_data, cmap='gray', interpolation='nearest', origin='lower', extent=[xlim[0], xlim[1], ylim[0], ylim[1]])
+        img = ax.imshow(
+            img_data, 
+            cmap='gray', 
+            interpolation='nearest', 
+            origin='lower', 
+            extent=[xlim[0], xlim[1], ylim[0], ylim[1]],
+            vmin=vmin,
+            vmax=4
+        )
         ax.set_title('All Four Patterns Overlapped')
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.grid(True, alpha=0.3)
         ax.set_aspect('equal')
         return fig, ax
-    return (create_irradiance_pattern,)
-
-
-@app.cell
-def _():
-    # rawimage0.value["grid"]
-    return
-
-
-@app.cell
-def _():
-    # extract_np_array(rawimage0.value["grid"])
-    return
-
-
-@app.cell
-def _():
-    # extract_np_array(rawimage3.value["grid"])
-    return
+    return (plot_irradiance_pattern,)
 
 
 @app.cell
@@ -360,121 +391,6 @@ def _(np):
         return overlap_image
 
     return create_grid_pattern, render_rectangles_direct, shift_rectangles
-
-
-@app.cell
-def _():
-    return
-
-
-@app.cell
-def _(
-    Rectangle,
-    extract_np_array,
-    np,
-    plt,
-    rawimage0,
-    rawimage1,
-    rawimage2,
-    rawimage3,
-):
-    def add_squares_to_plot(ax, n_size, matrix, shift_x, shift_y, _square_offset, _square_size):
-        for i in range(n_size):
-            for j in range(n_size):
-                # Use matrix value as both grayscale and alpha for blending
-                gray_value = matrix[i, j] # * 2
-                # Calculate bottom-left corner of the square to center it
-                x = j + _square_offset + shift_x
-                y = n_size - 1 - i + _square_offset + shift_y  # Flip y-axis to match matrix indexing
-                # Create a square (Rectangle) with white color and alpha blending
-                square = Rectangle((x, y), _square_size, _square_size, 
-                                  facecolor=(1, 1, 1), alpha=gray_value)
-                ax.add_patch(square)
-
-    def create_plot(
-        # threshold=0,
-        n_size=5, 
-        image0=rawimage0, 
-        image1=rawimage1, 
-        image2=rawimage2, 
-        image3=rawimage3):
-        
-        # Create a figure and axis
-        fig, ax = plt.subplots()
-    
-        # Set the background color to black
-        fig.patch.set_facecolor('black')
-        ax.set_facecolor('black')
-    
-        # Square size settings
-        full_size = 1.0  # Full cell size in matrix coordinates
-        square_size = full_size * 0.825  # 20% reduction (80% of original size)
-        offset = (full_size - square_size) / 2  # Offset to center the square
-    
-        # Draw individual squares for the original positions
-        add_squares_to_plot(
-            ax, 
-            n_size=n_size, 
-            matrix=extract_np_array(image0.value["grid"]), 
-            shift_x=0, 
-            shift_y=0, 
-            _square_offset=offset, 
-            _square_size=square_size
-        )
-    
-        # Draw individual squares for the shifted positions (y + 0.5)
-        add_squares_to_plot(
-            ax, 
-            n_size=n_size, 
-            matrix=extract_np_array(image1.value["grid"]), 
-            shift_x=0, 
-            shift_y=0.5, 
-            _square_offset=offset, 
-            _square_size=square_size
-        )
-    
-        # Draw individual squares for the shifted positions (x + 0.5)
-        add_squares_to_plot(
-            ax, 
-            n_size=n_size, 
-            matrix=extract_np_array(image3.value["grid"]), 
-            shift_x=0.5, 
-            shift_y=0, 
-            _square_offset=offset, 
-            _square_size=square_size
-        )
-    
-        # Draw individual squares for the shifted positions (x+0.5, y+0.5)
-        add_squares_to_plot(
-            ax, 
-            n_size=n_size, 
-            matrix=extract_np_array(image2.value["grid"]), 
-            shift_x=0.5, 
-            shift_y=0.5, 
-            _square_offset=offset, 
-            _square_size=square_size
-        )
-    
-        # Add red vertical and horizontal lines at integer + 0.5 positions
-        line_positions = np.arange(0, n_size + 2, 0.5)  # Positions: 0.0, 0.5, 1.0, 1.5, ...
-        ax.vlines(line_positions, ymin=0, ymax=n_size + 0.5, colors='red', linewidth=1)
-        ax.hlines(line_positions, xmin=0, xmax=n_size, colors='red', linewidth=1)
-    
-        eps = 0.02
-        # Set axis limits to show the entire grid
-        ax.set_xlim(0 - eps, n_size + eps)
-        ax.set_ylim(0 - eps, n_size + eps)
-    
-        # Remove axis ticks and labels
-        ax.set_xticks([])
-        ax.set_yticks([])
-    
-        # Ensure the plot is square
-        ax.set_aspect('equal')
-    
-        # Return figure and axes objects
-        return fig, ax
-    return
 
 
 @app.cell
