@@ -16,6 +16,7 @@ def _(mo):
     - Plot data from 4 grids in matplotlib map of irradiance and show underneath 2x2 toggle grids array
     - Convert overlapping rectangular patches into an image and map to grayscale [threshold, 1]
     - Input to set threshold value for irradiance map
+    - Add buttons to turn all pixels on and all pixels off
 
     # Next steps
     - Add float input widget to set micromirror array fill factor
@@ -113,6 +114,21 @@ def _(anywidget, traitlets):
             }
           });
       
+          // Listen for set_all_trigger changes
+          model.on("change:set_all_trigger", () => {
+            // Set all to true
+            grid = Array(size).fill().map(() => Array(size).fill(true));
+            model.set("grid", grid);
+            model.save_changes();
+        
+            // Update visual
+            for (let i = 0; i < size; i++) {
+              for (let j = 0; j < size; j++) {
+                squares[i][j].style.backgroundColor = "white";
+              }
+            }
+          });
+      
           // Listen for model changes
           model.on("change:grid", () => {
             const newGrid = model.get("grid");
@@ -132,6 +148,7 @@ def _(anywidget, traitlets):
     
         grid = traitlets.List([]).tag(sync=True)
         reset_trigger = traitlets.Int(0).tag(sync=True)
+        set_all_trigger = traitlets.Int(0).tag(sync=True)
     
         def __init__(self):
             # Initialize with 5x5 grid of False (black)
@@ -161,7 +178,16 @@ def _(ToggleGrid, mo):
         _toggle_grid_instance2.reset_trigger += 1
         _toggle_grid_instance3.reset_trigger += 1
 
-    set_all_to_black = mo.ui.button(label="Turn off all pixels", on_click=lambda _: reset_grid())
+    # Set all function
+    def set_all_grid():
+        """Call this function to set all grid values to True"""
+        _toggle_grid_instance0.set_all_trigger += 1
+        _toggle_grid_instance1.set_all_trigger += 1
+        _toggle_grid_instance2.set_all_trigger += 1
+        _toggle_grid_instance3.set_all_trigger += 1
+
+    set_all_to_black = mo.ui.button(label="All pixels off", on_click=lambda _: reset_grid())
+    set_all_to_white = mo.ui.button(label="All pixels on", on_click=lambda _: set_all_grid())
 
     irradiance_threshold = mo.ui.dropdown(options=["1 or more", "2 or more", "3 or more", "4"], label="Threshold: overlapping images", value="1 or more")
     return (
@@ -171,13 +197,8 @@ def _(ToggleGrid, mo):
         rawimage2,
         rawimage3,
         set_all_to_black,
+        set_all_to_white,
     )
-
-
-@app.cell
-def _(rawimage0):
-    rawimage0.value["grid"]
-    return
 
 
 @app.cell
@@ -191,6 +212,7 @@ def _(
     rawimage2,
     rawimage3,
     set_all_to_black,
+    set_all_to_white,
     xlim,
     ylim,
 ):
@@ -199,7 +221,7 @@ def _(
 
     # Display it
     mo.vstack([
-        mo.hstack([set_all_to_black], justify="start"),
+        mo.hstack([set_all_to_black, set_all_to_white], justify="start"),
         mo.hstack([rawimage1, rawimage2], justify="start"),
         mo.hstack([rawimage0, rawimage3], justify="start"),
         mo.hstack([plot_ax, irradiance_threshold], justify="start")
