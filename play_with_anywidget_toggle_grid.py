@@ -171,6 +171,8 @@ def _(ToggleGrid, mo):
     _toggle_grid_instance3 = ToggleGrid()
     rawimage3 = mo.ui.anywidget(_toggle_grid_instance3)
 
+    fill_factor_2D = mo.ui.number(start=0.2, stop=1.0, label="Pixel fill factor", value=0.68)
+
     def reset_grid():
         """Call this function to reset the grid"""
         _toggle_grid_instance0.reset_trigger += 1
@@ -191,6 +193,7 @@ def _(ToggleGrid, mo):
 
     irradiance_threshold = mo.ui.dropdown(options=["1 or more", "2 or more", "3 or more", "4"], label="Threshold: overlapping images", value="1 or more")
     return (
+        fill_factor_2D,
         irradiance_threshold,
         rawimage0,
         rawimage1,
@@ -203,6 +206,7 @@ def _(ToggleGrid, mo):
 
 @app.cell
 def _(
+    fill_factor_2D,
     irradiance_threshold,
     mo,
     overlap_image,
@@ -221,7 +225,7 @@ def _(
 
     # Display it
     mo.vstack([
-        mo.hstack([set_all_to_black, set_all_to_white], justify="start"),
+        mo.hstack([set_all_to_black, set_all_to_white, fill_factor_2D], justify="start"),
         mo.hstack([rawimage1, rawimage2], justify="start"),
         mo.hstack([rawimage0, rawimage3], justify="start"),
         mo.hstack([plot_ax, irradiance_threshold], justify="start")
@@ -247,6 +251,7 @@ def _(np):
 def _(
     create_grid_pattern,
     extract_np_array,
+    fill_factor_2D,
     np,
     rawimage0,
     rawimage1,
@@ -258,8 +263,8 @@ def _(
     # Parameters
     grid_size = 5
     square_size = 1.0  # Grid spacing
-    fill_factor_2D = 0.68  # 68% 2D fill factor
-    fill_factor_1D = np.sqrt(fill_factor_2D)  # 1D fill factor
+    # fill_factor_2D = 0.68  # 68% 2D fill factor
+    fill_factor_1D = np.sqrt(fill_factor_2D.value)  # 1D fill factor
     pixels_per_square = 50  # Number of pixels per grid square
 
     # Calculate image size based on pixels per square
