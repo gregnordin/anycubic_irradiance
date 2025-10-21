@@ -3,7 +3,7 @@ name: Deploy Marimo to GitHub Pages
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:  # Allows manual runs
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,9 +25,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Install marimo and dependencies (add pyproject.toml if needed)
-          uv pip install marimo  # Add other packages like pandas, plotly if used
-          # If pyproject.toml exists, use: uv sync
+          uv pip install --system marimo  # Install system-wide
+          # Add other packages like pandas, plotly if needed, e.g.:
+          # uv pip install --system marimo pandas plotly
 
       - name: Export notebook
         run: |
