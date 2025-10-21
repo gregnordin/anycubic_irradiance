@@ -16,10 +16,10 @@ def _(mo):
 
     As shown in the image below, the four-image sequence is achieved by rapidly rotating a tilted glass window.
 
-    1. Unshifted image
-    2. Shifted up by 1/2 pixel (i.e., 1/2 of a 102 &mu;m pixel)
-    3. Shifted up and right by 1/2 pixel
-    4. Shifted right by 1/2 pixel
+    1. Unshifted image.
+    2. Shifted up by 1/2 pixel (i.e., 1/2 of a 102 &mu;m pixel).
+    3. Shifted up and right by 1/2 pixel.
+    4. Shifted right by 1/2 pixel.
     """
     )
     return
