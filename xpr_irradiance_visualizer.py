@@ -283,7 +283,7 @@ def _(
     img_height = int((ylim[1] - ylim[0]) * pixels_per_square)
     img_size = (img_height, img_width)
 
-    # Create the base grid with fill factor
+    # Create the unshifted grid with fill factor
     rectangles_unshifted = create_grid_pattern(
         grid_size, square_size, fill_factor_1D, extract_np_array(rawimage0.value["grid"]))
 
