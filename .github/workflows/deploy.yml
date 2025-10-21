@@ -1,0 +1,67 @@
+name: Deploy Marimo to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual runs
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          version: latest
+
+      - name: Install dependencies
+        run: |
+          # Install marimo and dependencies (add pyproject.toml if needed)
+          uv pip install marimo  # Add other packages like pandas, plotly if used
+          # If pyproject.toml exists, use: uv sync
+
+      - name: Export notebook
+        run: |
+          # Verify notebook exists
+          if [ ! -f xpr_irradiance_visualizer.py ]; then
+            echo "Error: xpr_irradiance_visualizer.py not found. Available files:"
+            ls -la
+            exit 1
+          fi
+          # Export with verbose output
+          marimo export html-wasm xpr_irradiance_visualizer.py -o _site --mode run
+          # Verify output
+          if [ ! -f _site/index.html ]; then
+            echo "Error: index.html not generated. Check marimo output above."
+            ls -la _site/
+            exit 1
+          fi
+          echo "Export successful. index.html size: $(wc -c <_site/index.html) bytes"
+
+      - name: Add .nojekyll
+        run: touch _site/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
