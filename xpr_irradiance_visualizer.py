@@ -27,7 +27,7 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.image(src="xpr_visual.jpg")
+    mo.image(src="public/xpr_visual.jpg")
     return
 
 
@@ -353,8 +353,8 @@ def _(plt):
             vmax=4
         )
         ax.set_title('All Four Patterns Overlapped')
-        ax.set_xlabel('x (102 $\mu$m pixels)')
-        ax.set_ylabel('y (102 $\mu$m pixels)')
+        ax.set_xlabel(r'x (102 $\mu$m pixels)')
+        ax.set_ylabel(r'y (102 $\mu$m pixels)')
         ax.grid(True, alpha=0.3)
         ax.set_aspect('equal')
         return fig, ax

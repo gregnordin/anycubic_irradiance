@@ -1,7 +1,9 @@
-`play_with_anywidget_toggle_grid.py`
+Notebook file: `xpr_irradiance_visualizer.py`
 
-To run as app: `uv run marimo run xpr_irradiance_visualizer.py`
-To run in edit mode: `uv run marimo edit xpr_irradiance_visualizer.py`
+To run as app: `uv run marimo run xpr_irradiance_visualizer.py`  
+To run in edit mode: `uv run marimo edit xpr_irradiance_visualizer.py`  
+Export as webpage with WASM to run python:  
+  `marimo export html-wasm xpr_irradiance_visualizer.py -o output_dir --mode run`
 
 ### Current state
 - Single grid works with `widget.get_grid_state()` returning the 2D grid array which accurately contains clicked grid tiles
@@ -15,6 +17,7 @@ To run in edit mode: `uv run marimo edit xpr_irradiance_visualizer.py`
 - Add float input widget to set micromirror array fill factor
 - Add labels to 4 input 102 um images to indicate shifts?
 - Reduce size of 4 input images
+- **Put jpg image into `/public` directory so it is used in the html-wasm export**
 
 ### Next steps
 - Show 51 um grid lines in final image?
