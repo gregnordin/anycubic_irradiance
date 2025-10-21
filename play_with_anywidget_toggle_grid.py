@@ -8,28 +8,75 @@ app = marimo.App(width="medium")
 def _(mo):
     mo.md(
         r"""
-    # Current state
-    - Single grid works with `widget.get_grid_state()` returning the 2D grid array which accurately contains clicked grid tiles
-    - Position grid inside a marimo container
-    - Make 4 grids and layout as 2x2 in marimo containers
-    - Convert `widget.grid` into a numpy boolean array, then into a numpy float array in range [0,1] and multiply by 0.25
-    - Plot data from 4 grids in matplotlib map of irradiance and show underneath 2x2 toggle grids array
-    - Convert overlapping rectangular patches into an image and map to grayscale [threshold, 1]
-    - Input to set threshold value for irradiance map
-    - Add buttons to turn all pixels on and all pixels off
-    - Add float input widget to set micromirror array fill factor
-    - Add labels to 4 input 102 um images to indicate shifts?
-    - Reduce size of 4 input images
+    ## Calculate Irradiance for TI XPR Projector
 
-    # Next steps
-    - Show 51 um grid lines in final image?
-    - make grid size a variable, n_size, and pass it into `ToggleGrid.__init__()`?
-    - Put `mo.ui.anywidget` wrapper in a function to make it easy to create fully reactive `ToggleGrid` widget
-    - Save state to file?
-    - Load state from file?
-    - How make image of UI and irradiance map?
+    ### Basic Idea
+
+    See [Understanding the XPR Technology](https://awolvision.com/blogs/awol-vision-blog/understanding-xpr-technology-for-4k-dlp-projectors) and the image below for an explanation of how XPR works. In summary, the technique is intended to double the apparent resolution of a projected image compared to the actual physical resolution of the projected micromirror array. For example, our Anycubic DLP 3D printer projects an image with a 102 &mu;m pixel pitch. However, the claimed resolution is 51 &mu;m, which is achieved by rapidly projecting four sequential 102 &mu;m pixel images to construct each 51 &mu;m image. As shown in the right panel of the image below. The four-image sequence is
+
+    1. Unshifted image
+    2. Shifted up by 1/2 pixel (i.e., 1/2 of a 102 &mu;m pixel)
+    3. Shifted up and right by 1/2 pixel
+    4. Shifted right by 1/2 pixel
     """
     )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.image(src="xpr_visual.jpg")
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    ### Visualization
+
+    Below are four 5x5 arrays of 102 &mu;m pixels, one for each of the XPR shifts, and the output image created by their temporal overlap.
+    """
+    )
+    return
+
+
+@app.cell
+def _(
+    fill_factor_2D,
+    irradiance_threshold,
+    mo,
+    overlap_image,
+    plot_irradiance_pattern,
+    rawimage0,
+    rawimage1,
+    rawimage2,
+    rawimage3,
+    set_all_to_black,
+    set_all_to_white,
+    xlim,
+    ylim,
+):
+    # plot_fig, plot_ax = create_plot() #irradiance_threshold.value)
+    plot_fig, plot_ax = plot_irradiance_pattern(overlap_image, xlim, ylim, irradiance_threshold.value)
+
+    # Display it
+    mo.vstack([
+        mo.md("### Individual 102 &mu;m Pixel Images"),
+        mo.md("Shift +y" + "&nbsp;"*38 +"Shift +xy"),
+        mo.hstack([rawimage1, rawimage2], justify="start"),
+        mo.md("Unshifted" + "&nbsp;"*37 +"Shift +x"),
+        mo.hstack([rawimage0, rawimage3], justify="start"),
+        mo.hstack([plot_ax, 
+                   mo.vstack(
+                       [
+                           set_all_to_black, 
+                           set_all_to_white, 
+                           fill_factor_2D,
+                           irradiance_threshold, 
+                       ], 
+                       justify="center")], justify="start")
+    ])
     return
 
 
@@ -154,7 +201,6 @@ def _(anywidget, traitlets):
             # Initialize with 5x5 grid of False (black)
             self.grid = [[False for _ in range(5)] for _ in range(5)]
             super().__init__()
-
     return (ToggleGrid,)
 
 
@@ -201,51 +247,6 @@ def _(ToggleGrid, mo):
         set_all_to_black,
         set_all_to_white,
     )
-
-
-@app.cell
-def _(
-    fill_factor_2D,
-    irradiance_threshold,
-    mo,
-    overlap_image,
-    plot_irradiance_pattern,
-    rawimage0,
-    rawimage1,
-    rawimage2,
-    rawimage3,
-    set_all_to_black,
-    set_all_to_white,
-    xlim,
-    ylim,
-):
-    # plot_fig, plot_ax = create_plot() #irradiance_threshold.value)
-    plot_fig, plot_ax = plot_irradiance_pattern(overlap_image, xlim, ylim, irradiance_threshold.value)
-
-    # Display it
-    mo.vstack([
-        mo.md("### Individual 102 &mu;m Pixel Images"),
-        mo.md("Shift +y" + "&nbsp;"*38 +"Shift +xy"),
-        mo.hstack([rawimage1, rawimage2], justify="start"),
-        mo.md("Unshifted" + "&nbsp;"*37 +"Shift +x"),
-        mo.hstack([rawimage0, rawimage3], justify="start"),
-        mo.hstack([plot_ax, 
-                   mo.vstack(
-                       [
-                           set_all_to_black, 
-                           set_all_to_white, 
-                           fill_factor_2D,
-                           irradiance_threshold, 
-                       ], 
-                       justify="center")], justify="start")
-    ])
-    return
-
-
-@app.cell
-def _(irradiance_threshold):
-    irradiance_threshold.value
-    return
 
 
 @app.cell
