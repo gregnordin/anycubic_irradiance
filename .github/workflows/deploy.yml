@@ -23,14 +23,21 @@ jobs:
           enable-cache: true
           version: latest
 
-      - name: Install dependencies
+      - name: Set up Python environment
         run: |
-          uv pip install --system marimo  # Install system-wide
-          # Add other packages like pandas, plotly if needed, e.g.:
-          # uv pip install --system marimo pandas plotly
+          # Create a virtual environment
+          uv venv .venv
+          # Activate the virtual environment
+          source .venv/bin/activate
+          # Install marimo and dependencies
+          uv pip install marimo
+          # Add other packages if needed, e.g.:
+          # uv pip install marimo pandas plotly
 
       - name: Export notebook
         run: |
+          # Activate virtual environment
+          source .venv/bin/activate
           # Verify notebook exists
           if [ ! -f xpr_irradiance_visualizer.py ]; then
             echo "Error: xpr_irradiance_visualizer.py not found. Available files:"
