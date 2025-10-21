@@ -37,7 +37,7 @@ def _(mo):
         r"""
     ## Visualization
 
-    Below are four 5x5 arrays of 102 &mu;m pixels, one for each of the XPR shifts, and the output image created by their temporal overlap.
+    Below are four 5x5 arrays of 102 &mu;m pixels, one for each of the XPR shifts, and the output image created by their temporal overlap. Click on the pixels of each image to toggle them on and off and observe the resultant combined image in the bottom plot.
     """
     )
     return
