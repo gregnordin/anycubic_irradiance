@@ -84,13 +84,11 @@ def _(
 
 @app.cell
 def _():
-    from functools import partial
     import marimo as mo
     import anywidget
     import traitlets
     import numpy as np
     import matplotlib.pyplot as plt
-    from matplotlib.patches import Rectangle
     return anywidget, mo, np, plt, traitlets
 
 
