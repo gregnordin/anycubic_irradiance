@@ -40,15 +40,38 @@ def _(anywidget, traitlets):
       
           const allOnButton = document.createElement('button');
           allOnButton.textContent = 'All On';
-          allOnButton.style.padding = '5px 15px';
+          allOnButton.style.padding = '8px 16px';
           allOnButton.style.cursor = 'pointer';
           allOnButton.style.fontSize = '12px';
+          allOnButton.style.backgroundColor = '#4CAF50';
+          allOnButton.style.color = 'white';
+          allOnButton.style.border = '1px solid #45a049';
+          allOnButton.style.borderRadius = '4px';
       
           const allOffButton = document.createElement('button');
           allOffButton.textContent = 'All Off';
-          allOffButton.style.padding = '5px 15px';
+          allOffButton.style.padding = '8px 16px';
           allOffButton.style.cursor = 'pointer';
           allOffButton.style.fontSize = '12px';
+          allOffButton.style.backgroundColor = '#f44336';
+          allOffButton.style.color = 'white';
+          allOffButton.style.border = '1px solid #da190b';
+          allOffButton.style.borderRadius = '4px';
+      
+          // Add hover effects
+          allOnButton.addEventListener('mouseenter', () => {
+            allOnButton.style.backgroundColor = '#45a049';
+          });
+          allOnButton.addEventListener('mouseleave', () => {
+            allOnButton.style.backgroundColor = '#4CAF50';
+          });
+      
+          allOffButton.addEventListener('mouseenter', () => {
+            allOffButton.style.backgroundColor = '#da190b';
+          });
+          allOffButton.addEventListener('mouseleave', () => {
+            allOffButton.style.backgroundColor = '#f44336';
+          });
       
           buttonsContainer.appendChild(allOnButton);
           buttonsContainer.appendChild(allOffButton);
@@ -70,6 +93,10 @@ def _(anywidget, traitlets):
           // Create grid state (all cells start black = 0)
           const gridState = Array(9).fill(null).map(() => Array(9).fill(0));
       
+          // Track mouse state for dragging
+          let isMouseDown = false;
+          let dragValue = null; // The value to paint while dragging
+      
           // Create cells
           const cells = [];
           for (let displayRow = 0; displayRow < 9; displayRow++) {
@@ -86,7 +113,7 @@ def _(anywidget, traitlets):
               // displayRow 8 -> actual row 0
               const actualRow = 8 - displayRow;
           
-              cell.addEventListener('click', () => {
+              const toggleCell = () => {
                 // Toggle state
                 gridState[actualRow][col] = 1 - gridState[actualRow][col];
             
@@ -100,12 +127,41 @@ def _(anywidget, traitlets):
                 model.set('last_clicked', [actualRow, col]);
                 model.set('grid_values', gridState.map(row => [...row]));
                 model.save_changes();
+            
+                return gridState[actualRow][col];
+              };
+          
+              const setCell = (value) => {
+                gridState[actualRow][col] = value;
+                cell.style.backgroundColor = value === 0 ? 'black' : 'white';
+                model.set('last_clicked', [actualRow, col]);
+                model.set('grid_values', gridState.map(row => [...row]));
+                model.save_changes();
+              };
+          
+              cell.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                isMouseDown = true;
+                dragValue = toggleCell();
+              });
+          
+              cell.addEventListener('mouseenter', () => {
+                if (isMouseDown && dragValue !== null) {
+                  setCell(dragValue);
+                  info.textContent = `Last clicked: (${actualRow}, ${col})`;
+                }
               });
           
               cells[displayRow][col] = cell;
               gridContainer.appendChild(cell);
             }
           }
+      
+          // Global mouse up handler to stop dragging
+          document.addEventListener('mouseup', () => {
+            isMouseDown = false;
+            dragValue = null;
+          });
       
           // All On button - sets all cells to 1 (white)
           allOnButton.addEventListener('click', () => {
@@ -142,7 +198,7 @@ def _(anywidget, traitlets):
         }
         export default { render };
         """
-    
+      
     
         # Traitlet to track the last clicked cell
         last_clicked = traitlets.List(default_value=None, allow_none=True).tag(sync=True)
