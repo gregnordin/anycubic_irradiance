@@ -7,7 +7,8 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import marimo as mo
-    return (mo,)
+    import numpy as np
+    return mo, np
 
 
 @app.cell(hide_code=True)
@@ -169,8 +170,8 @@ def _(anywidget, traitlets):
           info.style.color = '#333';
           info.textContent = 'Click any cell to toggle';
       
-          // Create grid state (all cells start black = 1)
-          const gridState = Array(9).fill(null).map(() => Array(9).fill(1));
+          // Create grid state (all cells start black = 0)
+          const gridState = Array(9).fill(null).map(() => Array(9).fill(0));
       
           // Create cells
           const cells = [];
@@ -182,7 +183,6 @@ def _(anywidget, traitlets):
               cell.style.height = '40px';
               cell.style.backgroundColor = 'black';
               cell.style.cursor = 'pointer';
-              cell.style.transition = 'background-color 0.2s';
           
               // Row index: 0 at bottom, 8 at top
               // displayRow 0 -> actual row 8
@@ -194,22 +194,15 @@ def _(anywidget, traitlets):
                 gridState[actualRow][col] = 1 - gridState[actualRow][col];
             
                 // Update color
-                cell.style.backgroundColor = gridState[actualRow][col] === 1 ? 'black' : 'white';
+                cell.style.backgroundColor = gridState[actualRow][col] === 0 ? 'black' : 'white';
             
                 // Update info
                 info.textContent = `Last clicked: (${actualRow}, ${col})`;
             
                 // Send to Python
                 model.set('last_clicked', [actualRow, col]);
+                model.set('grid_values', gridState.map(row => [...row]));
                 model.save_changes();
-              });
-          
-              cell.addEventListener('mouseenter', () => {
-                cell.style.opacity = '0.8';
-              });
-          
-              cell.addEventListener('mouseleave', () => {
-                cell.style.opacity = '1';
               });
           
               cells[displayRow][col] = cell;
@@ -226,6 +219,10 @@ def _(anywidget, traitlets):
     
         # Traitlet to track the last clicked cell
         last_clicked = traitlets.List(default_value=None, allow_none=True).tag(sync=True)
+    
+        # Traitlet to track all grid values (0 = black, 1 = white)
+        grid_values = traitlets.List(default_value=[[0]*9 for _ in range(9)]).tag(sync=True)
+
 
     # Create an instance of the widget
     def create_grid():
@@ -237,17 +234,30 @@ def _(anywidget, traitlets):
 @app.cell
 def _(create_grid, mo):
     # Create the widget
-    grid = create_grid()
+    grid = mo.ui.anywidget(create_grid())
 
-    # Display it
-    mo.ui.anywidget(grid)
-
+    # grid
     return (grid,)
 
 
 @app.cell
-def _(grid, mo):
-    mo.md(f"{grid.last_clicked}")
+def _(grid, mo, np):
+    # Display it
+    # grid_values_wdgt = mo.md(f"{grid.grid_values}")
+
+    mo.vstack([grid, np.array(grid.value.get("grid_values"))])
+    return
+
+
+@app.cell
+def _(grid, np):
+    np.array(grid.value.get("grid_values"))
+    return
+
+
+@app.cell
+def _(grid, mo, np):
+    mo.md(f"{np.array(grid.value.get("grid_values"))}")
     return
 
 
