@@ -34,7 +34,8 @@ def _():
           container.style.display = "inline-grid";
           container.style.gridTemplateColumns = "repeat(" + size + ", 24px)";
           container.style.gridTemplateRows = "repeat(" + size + ", 24px)";
-          container.style.gap = "2px";
+          container.style.gap = "1px";               // smaller visual separation
+          container.style.backgroundColor = "#444";  // grid line color
 
           const status = document.createElement("div");
           status.style.marginTop = "8px";
@@ -73,7 +74,8 @@ def _():
               cell.style.width = "24px";
               cell.style.height = "24px";
               cell.style.cursor = "pointer";
-              cell.style.border = "1px solid #444";
+              cell.style.boxSizing = "border-box";
+              cell.style.border = "none";             // no per-cell border
               cell.dataset.row = String(pyRow);
               cell.dataset.col = String(col);
               cell.style.backgroundColor = colorFor(grid[pyRow][col]);
@@ -158,11 +160,11 @@ def _(anywidget, traitlets):
       
           const gridContainer = document.createElement('div');
           gridContainer.style.display = 'grid';
-          gridContainer.style.gridTemplateColumns = 'repeat(9, 40px)';
-          gridContainer.style.gridTemplateRows = 'repeat(9, 40px)';
-          gridContainer.style.gap = '2px';
+          gridContainer.style.gridTemplateColumns = 'repeat(9, 20px)';
+          gridContainer.style.gridTemplateRows = 'repeat(9, 20px)';
+          gridContainer.style.gap = '1px';
           gridContainer.style.backgroundColor = '#333';
-          gridContainer.style.padding = '2px';
+          gridContainer.style.padding = '1px';
           gridContainer.style.marginBottom = '20px';
       
           const info = document.createElement('div');
@@ -179,8 +181,8 @@ def _(anywidget, traitlets):
             cells[displayRow] = [];
             for (let col = 0; col < 9; col++) {
               const cell = document.createElement('div');
-              cell.style.width = '40px';
-              cell.style.height = '40px';
+              cell.style.width = '20px';
+              cell.style.height = '20px';
               cell.style.backgroundColor = 'black';
               cell.style.cursor = 'pointer';
           
@@ -217,6 +219,7 @@ def _(anywidget, traitlets):
         export default { render };
         """
     
+    
         # Traitlet to track the last clicked cell
         last_clicked = traitlets.List(default_value=None, allow_none=True).tag(sync=True)
     
@@ -235,29 +238,17 @@ def _(anywidget, traitlets):
 def _(create_grid, mo):
     # Create the widget
     grid = mo.ui.anywidget(create_grid())
-
-    # grid
     return (grid,)
 
 
 @app.cell
 def _(grid, mo, np):
-    # Display it
-    # grid_values_wdgt = mo.md(f"{grid.grid_values}")
+    # Display grid values with spaces between numbers
+    arr = np.array(grid.value.get("grid_values"))
+    rows_text = "\n".join([" ".join(map(str, row)) for row in arr[::-1]])
 
-    mo.vstack([grid, np.array(grid.value.get("grid_values"))])
-    return
-
-
-@app.cell
-def _(grid, np):
-    np.array(grid.value.get("grid_values"))
-    return
-
-
-@app.cell
-def _(grid, mo, np):
-    mo.md(f"{np.array(grid.value.get("grid_values"))}")
+    # Display grid and values
+    mo.vstack([grid, mo.md(f"```\n{rows_text}\n```")])
     return
 
 
