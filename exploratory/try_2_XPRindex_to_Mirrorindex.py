@@ -22,11 +22,15 @@ def _():
 
     def mi(i):
         """
-        Given XPR pixel index i, return physical mirror index
+        Given 1D XPR pixel index i, return 1D physical mirror index, i'.
+        See handwritten notes.
         """
         return (i + i%2) // 2
 
     def quadrant(i,j):
+        """
+        Return which quadrant of a physical mirror the XPR i,j pixel lands on.
+        """
         return (0 if j%2 == 1 else 1) if i%2 == 1 else (2 if j%2 == 1 else 3)
 
     def convert_to_phys_mirror(i,j):
@@ -61,7 +65,32 @@ def _(convert_to_phys_mirror, ii, jj):
     def xpr_to_phys_mirrors(i, j):
         """
         Determine indices of which 4 physical mirrors must be turned on
-        to turn on XPR mirror i,j.
+        to turn on XPR pixel i,j.
+    
+        Parameters
+        ----------
+        i : int
+            Row index of the XPR pixel
+        j : int
+            Column index of the XPR pixel
+    
+        Returns
+        -------
+        list of tuple
+            List of 4 tuples (ip, jp) representing the physical mirror indices
+            that need to be turned on. The mapping depends on which quadrant
+            of the physical mirror the XPR pixel maps to:
+            - Quadrant 0: Mirror ip,jp unshifted and 3 shifted mirrors in negative x, y, and xy directions
+            - Quadrant 1: Mirror ip,jp unshifted and x-shifted, and mirror in -y direction shifted in y and xy
+            - Quadrant 2: Mirror ip,jp unshifted and y-shifted, and mirror in -x direction shifted in x and xy
+            - Quadrant 3: Mirror ip,jp unshifted and x-, y-, and xy-shifted
+    
+        Notes
+        -----
+        Each XPR pixel maps to a location within an unshifted physical mirror, divided
+        into 4 quadrants. Depending on the quadrant, different combinations
+        of the shifted physical mirrors must be activated to illuminate
+        the XPR pixel position.
         """
         ip, jp, quadrant = convert_to_phys_mirror(i,j)
         if quadrant == 0:
@@ -76,7 +105,6 @@ def _(convert_to_phys_mirror, ii, jj):
     for i2 in ii:
         for j2 in jj:
             print(xpr_to_phys_mirrors(i2,j2))
-
     return (xpr_to_phys_mirrors,)
 
 
