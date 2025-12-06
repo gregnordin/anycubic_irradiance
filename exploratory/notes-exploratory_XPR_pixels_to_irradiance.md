@@ -4,7 +4,8 @@ Develop interactive visualization to show the actual irradiance distribution gen
 
 # Next
 
-
+- Go from physical pixel arrays to irradiance map &rarr; look at my other marimo app that does this.
+- Change how physical pixel arrays are displayed. Text &rarr; black or white squares with text number in it?
 
 # Log
 
