@@ -15,3 +15,5 @@ Develop algorithm to go from XPR DLP pixel index i,j to physical pixel index i',
 ## Saturday, 12/6/25
 
 Develop Anywidget widget to show interactive 9x9 XPR DLP pixel array where each pixel toggles between black and white when clicked. See `exploratory/try_3_anywidget_9x9_grid.py`. Try both Claude and ChatGPT-generated widgets; much prefer the one from Claude even though it took a very long time to generate for the first prompt so delete the one from ChatGPT. Add functionality so can drag over pixels to toggle them. Works great and is very convenient.
+
+`exploratory/dev_4_XPR_9x9_array_to_physical_5x5_arrays.py`: display physical pixel arrays as numbers from 0 to 4 indicating how many XPR pixels rely on each physical pixel.
