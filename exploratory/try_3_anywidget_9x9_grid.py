@@ -32,6 +32,27 @@ def _(anywidget, traitlets):
           container.style.alignItems = 'center';
           container.style.fontFamily = 'Arial, sans-serif';
       
+          // Buttons container
+          const buttonsContainer = document.createElement('div');
+          buttonsContainer.style.display = 'flex';
+          buttonsContainer.style.gap = '10px';
+          buttonsContainer.style.marginBottom = '10px';
+      
+          const allOnButton = document.createElement('button');
+          allOnButton.textContent = 'All On';
+          allOnButton.style.padding = '5px 15px';
+          allOnButton.style.cursor = 'pointer';
+          allOnButton.style.fontSize = '12px';
+      
+          const allOffButton = document.createElement('button');
+          allOffButton.textContent = 'All Off';
+          allOffButton.style.padding = '5px 15px';
+          allOffButton.style.cursor = 'pointer';
+          allOffButton.style.fontSize = '12px';
+      
+          buttonsContainer.appendChild(allOnButton);
+          buttonsContainer.appendChild(allOffButton);
+      
           const gridContainer = document.createElement('div');
           gridContainer.style.display = 'grid';
           gridContainer.style.gridTemplateColumns = 'repeat(9, 20px)';
@@ -86,6 +107,35 @@ def _(anywidget, traitlets):
             }
           }
       
+          // All On button - sets all cells to 1 (white)
+          allOnButton.addEventListener('click', () => {
+            for (let row = 0; row < 9; row++) {
+              for (let col = 0; col < 9; col++) {
+                gridState[row][col] = 1;
+                const displayRow = 8 - row;
+                cells[displayRow][col].style.backgroundColor = 'white';
+              }
+            }
+            info.textContent = 'All pixels on';
+            model.set('grid_values', gridState.map(row => [...row]));
+            model.save_changes();
+          });
+      
+          // All Off button - sets all cells to 0 (black)
+          allOffButton.addEventListener('click', () => {
+            for (let row = 0; row < 9; row++) {
+              for (let col = 0; col < 9; col++) {
+                gridState[row][col] = 0;
+                const displayRow = 8 - row;
+                cells[displayRow][col].style.backgroundColor = 'black';
+              }
+            }
+            info.textContent = 'All pixels off';
+            model.set('grid_values', gridState.map(row => [...row]));
+            model.save_changes();
+          });
+      
+          container.appendChild(buttonsContainer);
           container.appendChild(gridContainer);
           container.appendChild(info);
           el.appendChild(container);
