@@ -8,9 +8,10 @@ app = marimo.App(width="medium")
 def _():
     import marimo as mo
     import numpy as np
+    import matplotlib.pyplot as plt
     import anywidget
     import traitlets
-    return anywidget, mo, np, traitlets
+    return anywidget, mo, np, plt, traitlets
 
 
 @app.cell(hide_code=True)
@@ -412,7 +413,9 @@ def _(
         gap=3.0, 
         widths=[0, 0],
     )
-    return (phys_arrays_text,)
+
+    irradiance_threshold_2 = mo.ui.dropdown(options=["1 or more", "2 or more", "3 or more", "4"], label="Threshold: overlapping images", value="1 or more")
+    return irradiance_threshold_2, phys_arrays_text
 
 
 @app.cell
@@ -440,34 +443,269 @@ def _(mo):
 
 
 @app.cell
-def _(mo, phys_arrays_text, xpr_grid, xpr_grid_text_display):
-    # Display grid values with spaces between numbers
-    # rows_text = format_array_for_text_display(
-    #     np.array(xpr_grid.value.get("grid_values"))
-    # )
-
+def _(
+    irradiance_threshold_2,
+    mo,
+    phys_arrays_text,
+    plot_fig,
+    xpr_grid,
+    xpr_grid_text_display,
+):
     # Display grid and values
+    horizontal_spacer = " "
+    vertical_spacer = mo.Html("<pre> </pre>")
     mo.vstack([
-        xpr_grid, 
+        mo.hstack([
+            mo.vstack([
+                mo.md("## XPR DLP Pixels"),
+                xpr_grid,
+                vertical_spacer,
+                # vertical_spacer,
+                mo.md("---"),
+                irradiance_threshold_2,
+                mo.md("---"),
+            ]),
+            mo.vstack([
+                mo.md("## Generated Irradiance Pattern"),            
+                plot_fig,
+            ]),
+        ]),
+        vertical_spacer,
         mo.hstack(
             [
+                horizontal_spacer,
                 xpr_grid_text_display,
+                horizontal_spacer,
                 mo.vstack([
                     mo.md("Physical pixels"),
-                        phys_arrays_text,
+                    phys_arrays_text,
                 ]),
             ],
             justify="start",
-            gap=2.0,
-            widths=[0,0]
-        )
+            gap=5.0,
+            widths=[0,0,0,0]
+        ),
     ])
     return
 
 
-@app.cell
-def _():
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Use code from other marimo app
+    """)
     return
+
+
+@app.cell
+def _(
+    create_grid_pattern,
+    extract_np_array,
+    np,
+    phys_px_shifted_x,
+    phys_px_shifted_xy,
+    phys_px_shifted_y,
+    phys_px_unshifted,
+    render_rectangles_direct,
+    shift_rectangles,
+    xpr_grid,
+):
+    # Trigger reactivity by accessing xpr_grid.value
+    _ = xpr_grid.value
+
+    # Parameters
+    grid_size = 5
+    square_size = 1.0  # Grid spacing
+    fill_factor_2D = 0.68  # 68% 2D fill factor
+    fill_factor_1D = np.sqrt(fill_factor_2D) # fill_factor_2D.value)  # 1D fill factor
+    pixels_per_square = 50  # Number of pixels per grid square
+
+    # Calculate image size based on pixels per square
+    xlim = (0, grid_size * square_size + 0.5 * square_size)
+    ylim = (0, grid_size * square_size + 0.5 * square_size)
+    img_width = int((xlim[1] - xlim[0]) * pixels_per_square)
+    img_height = int((ylim[1] - ylim[0]) * pixels_per_square)
+    img_size = (img_height, img_width)
+
+    # Create the unshifted grid with fill factor
+    rectangles_unshifted = create_grid_pattern(
+        grid_size, 
+        square_size, 
+        fill_factor_1D, 
+        extract_np_array(phys_px_unshifted, reverse_order=False))
+
+    # Create shifted grids
+    shift_amount = 0.5 * square_size
+    rectangles_shifted_x = shift_rectangles(
+        create_grid_pattern(
+            grid_size, 
+            square_size, 
+            fill_factor_1D, 
+            extract_np_array(phys_px_shifted_x, reverse_order=False)
+        ), 
+        shift_x=shift_amount, 
+        shift_y=0
+    )
+    rectangles_shifted_y = shift_rectangles(
+        create_grid_pattern(
+            grid_size, 
+            square_size, 
+            fill_factor_1D, 
+            extract_np_array(phys_px_shifted_y, reverse_order=False)
+        ), 
+        shift_x=0, 
+        shift_y=shift_amount)
+    rectangles_shifted_xy = shift_rectangles(
+        create_grid_pattern(
+            grid_size, 
+            square_size, 
+            fill_factor_1D, 
+            extract_np_array(phys_px_shifted_xy, reverse_order=False)
+        ), 
+        shift_x=shift_amount, 
+        shift_y=shift_amount
+    )
+
+    # print(rectangles_unshifted)
+
+    # Combine all four grids
+    all_rectangles = rectangles_unshifted + rectangles_shifted_x + rectangles_shifted_y + rectangles_shifted_xy
+
+    overlap_image = render_rectangles_direct(all_rectangles, img_size, xlim, ylim)
+    return overlap_image, xlim, ylim
+
+
+@app.cell
+def _(
+    irradiance_threshold_2,
+    overlap_image,
+    plot_irradiance_pattern,
+    xlim,
+    ylim,
+):
+    plot_fig, plot_ax = plot_irradiance_pattern(
+        overlap_image, xlim, ylim, 
+        irradiance_threshold_2.value, 
+        title=""
+    )
+    return (plot_fig,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Code from other marimo app
+    """)
+    return
+
+
+@app.cell
+def _(np):
+    def extract_np_array(rawimage_grid, max_value=1, reverse_order=True):
+        if reverse_order:
+            return np.array(rawimage_grid[::-1]).astype(float) * max_value
+        else:
+            return np.array(rawimage_grid).astype(float) * max_value
+    return (extract_np_array,)
+
+
+@app.cell
+def _(np):
+    def create_grid_pattern(grid_size=5, square_size=1.0, fill_factor=1.0, pattern=None):
+        """
+        Create a list of rectangles based on a 5x5 grid pattern.
+
+        Parameters:
+        - grid_size: size of the grid (5 for 5x5)
+        - square_size: size of each grid cell (spacing between squares)
+        - fill_factor: 1D fraction of the grid cell that is filled (0 to 1)
+        - pattern: 2D array of 0s and 1s indicating which squares are active
+
+        Returns:
+        - List of rectangle tuples (x, y, width, height)
+        """
+        if pattern is None:
+            # Default pattern - checkerboard
+            pattern = np.zeros((grid_size, grid_size))
+            pattern[::2, ::2] = 1
+            pattern[1::2, 1::2] = 1
+
+        rectangles = []
+        actual_square_size = square_size * fill_factor
+        offset = (square_size - actual_square_size) / 2  # Center the square in the grid cell
+
+        for i in range(grid_size):
+            for j in range(grid_size):
+                if pattern[i, j] >= 1:
+                    x = j * square_size + offset
+                    y = i * square_size + offset
+                    rectangles.append((x, y, actual_square_size, actual_square_size))
+
+        return rectangles
+
+    def shift_rectangles(rectangles, shift_x=0, shift_y=0):
+        """
+        Shift all rectangles by given amounts.
+        """
+        return [(x + shift_x, y + shift_y, w, h) for x, y, w, h in rectangles]
+
+    def render_rectangles_direct(rectangles, img_size=(500, 500), xlim=(0, 5), ylim=(0, 5)):
+        """
+        Directly rasterize rectangles to count overlaps.
+        """
+        overlap_image = np.zeros(img_size)
+
+        for x, y, width, height in rectangles:
+            # Convert rectangle coordinates to pixel coordinates
+            x_start = int((x - xlim[0]) / (xlim[1] - xlim[0]) * img_size[1])
+            x_end = int((x + width - xlim[0]) / (xlim[1] - xlim[0]) * img_size[1])
+            y_start = int((y - ylim[0]) / (ylim[1] - ylim[0]) * img_size[0])
+            y_end = int((y + height - ylim[0]) / (ylim[1] - ylim[0]) * img_size[0])
+
+            # Clamp to image boundaries
+            x_start = max(0, min(x_start, img_size[1]))
+            x_end = max(0, min(x_end, img_size[1]))
+            y_start = max(0, min(y_start, img_size[0]))
+            y_end = max(0, min(y_end, img_size[0]))
+
+            # Add 1 to the overlap count in this rectangle region
+            overlap_image[y_start:y_end, x_start:x_end] += 1
+
+        return overlap_image
+    return create_grid_pattern, render_rectangles_direct, shift_rectangles
+
+
+@app.cell
+def _(plt):
+    def plot_irradiance_pattern(img_data, xlim, ylim, threshold, title="All Four Patterns Overlapped"):
+        eps = 1e-1
+        if threshold == "1 or more":
+            vmin = 0
+        elif threshold == "2 or more":
+            vmin = 1 + eps
+        elif threshold == "3 or more":
+            vmin = 2 + eps
+        elif threshold == "4":
+            vmin = 3 + eps
+        else:
+            raise ValueError(f"Incorrect threshold: {threshold}")
+        fig, ax = plt.subplots() # 2, 3, figsize=(15, 10))
+        img = ax.imshow(
+            img_data, 
+            cmap='gray', 
+            interpolation='nearest', 
+            origin='lower', 
+            extent=[xlim[0], xlim[1], ylim[0], ylim[1]],
+            vmin=vmin,
+            vmax=4
+        )
+        ax.set_title(title)
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.grid(True, alpha=0.3)
+        ax.set_aspect('equal')
+        return fig, ax
+    return (plot_irradiance_pattern,)
 
 
 if __name__ == "__main__":

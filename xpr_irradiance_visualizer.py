@@ -1,18 +1,17 @@
 import marimo
 
-__generated_with = "0.17.0"
+__generated_with = "0.18.2"
 app = marimo.App(width="medium")
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Calculate Irradiance for TI XPR Projector
 
     ## Basic Idea
 
-    See [Understanding the XPR Technology](https://awolvision.com/blogs/awol-vision-blog/understanding-xpr-technology-for-4k-dlp-projectors) and the image below for an explanation of how XPR works. In summary, the technique is intended to double the apparent resolution of a projected image compared to the actual physical resolution of the projected micromirror array. For example, our Anycubic DLP 3D printer projects an image with a 102 &mu;m pixel pitch. However, the claimed resolution is 51 &mu;m, which is achieved by rapidly projecting four sequential 102 &mu;m pixel images to construct a 51 &mu;m image. The 51 &mu;m image is considered to be the integration over time of the 4 sequential images. This makes sense if the temporal sequencing is faster than the physical system can respond, such as the human visual system when viewing a video. However, it does not mean that no light is projected into every 51 &mu;m pixel that is supposed to be dark, which can be seen by playing with the visualization on this page. 
+    See [Understanding the XPR Technology](https://awolvision.com/blogs/awol-vision-blog/understanding-xpr-technology-for-4k-dlp-projectors) and the image below for an explanation of how XPR works. In summary, the technique is intended to double the apparent resolution of a projected image compared to the actual physical resolution of the projected micromirror array. For example, our Anycubic DLP 3D printer projects an image with a 102 &mu;m pixel pitch. However, the claimed resolution is 51 &mu;m, which is achieved by rapidly projecting four sequential 102 &mu;m pixel images to construct a 51 &mu;m image. The 51 &mu;m image is considered to be the integration over time of the 4 sequential images. This makes sense if the temporal sequencing is faster than the physical system can respond, such as the human visual system when viewing a video. However, it does not mean that no light is projected into every 51 &mu;m pixel that is supposed to be dark, which can be seen by playing with the visualization on this page.
 
     As shown in the image below, the four-image sequence is achieved by rapidly rotating a tilted glass window.
 
@@ -20,8 +19,7 @@ def _(mo):
     2. Shifted up by 1/2 pixel (i.e., 1/2 of a 102 &mu;m pixel).
     3. Shifted up and right by 1/2 pixel.
     4. Shifted right by 1/2 pixel.
-    """
-    )
+    """)
     return
 
 
@@ -33,13 +31,11 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Visualization
 
     Below are four 5x5 arrays of 102 &mu;m pixels, one for each of the XPR shifts, and the output image created by their temporal overlap. Click on the pixels of each image to toggle them on and off and observe the resultant combined image in the bottom plot.
-    """
-    )
+    """)
     return
 
 
@@ -330,7 +326,7 @@ def _(
 
 @app.cell
 def _(plt):
-    def plot_irradiance_pattern(img_data, xlim, ylim, threshold):
+    def plot_irradiance_pattern(img_data, xlim, ylim, threshold, title="All Four Patterns Overlapped"):
         eps = 1e-1
         if threshold == "1 or more":
             vmin = 0
@@ -352,9 +348,9 @@ def _(plt):
             vmin=vmin,
             vmax=4
         )
-        ax.set_title('All Four Patterns Overlapped')
-        ax.set_xlabel(r'x (102 $\mu$m pixels)')
-        ax.set_ylabel(r'y (102 $\mu$m pixels)')
+        ax.set_title(title)
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
         ax.grid(True, alpha=0.3)
         ax.set_aspect('equal')
         return fig, ax
@@ -388,7 +384,7 @@ def _(np):
 
         for i in range(grid_size):
             for j in range(grid_size):
-                if pattern[i, j] == 1:
+                if pattern[i, j] >= 1:
                     x = j * square_size + offset
                     y = i * square_size + offset
                     rectangles.append((x, y, actual_square_size, actual_square_size))

@@ -4,8 +4,14 @@ Develop interactive visualization to show the actual irradiance distribution gen
 
 # Next
 
-- Go from physical pixel arrays to irradiance map &rarr; look at my other marimo app that does this.
+- &#9989; Go from physical pixel arrays to irradiance map &rarr; look at my other marimo app that does this.
 - Change how physical pixel arrays are displayed. Text &rarr; black or white squares with text number in it?
+- Change name of repo and project from *Anycubic* to *XPR_DLP*.
+- Make shared functions more general to accommodate both apps.
+    - Irradiance plot.
+- In original marimo app, remove references to 102 &mu;m and 51 &mu;m pixels.
+- Add threshold widget.
+- Consolidate the two marimo apps and put in separate tabs?
 
 # Log
 
@@ -17,4 +23,8 @@ Develop algorithm to go from XPR DLP pixel index i,j to physical pixel index i',
 
 Develop Anywidget widget to show interactive 9x9 XPR DLP pixel array where each pixel toggles between black and white when clicked. See `exploratory/try_3_anywidget_9x9_grid.py`. Try both Claude and ChatGPT-generated widgets; much prefer the one from Claude even though it took a very long time to generate for the first prompt so delete the one from ChatGPT. Add functionality so can drag over pixels to toggle them. Works great and is very convenient.
 
-`exploratory/dev_4_XPR_9x9_array_to_physical_5x5_arrays.py`: display physical pixel arrays as numbers from 0 to 4 indicating how many XPR pixels rely on each physical pixel.
+`exploratory/dev_4_XPR_9x9_array_to_physical_5x5_arrays.py`
+
+- display physical pixel arrays as numbers from 0 to 4 indicating how many XPR pixels rely on each physical pixel.
+
+- Use code from `xpr_irradiance_visualizer.py` to display irradiance distribution.
