@@ -9,7 +9,7 @@ Develop interactive visualization to show the actual irradiance distribution gen
 - Change name of repo and project from *Anycubic* to *XPR_DLP*.
 - Make shared functions more general to accommodate both apps.
     - Irradiance plot.
-- In original marimo app, remove references to 102 &mu;m and 51 &mu;m pixels.
+- &#9989; In original marimo app, remove references to 102 &mu;m and 51 &mu;m pixels.
 - Add threshold widget.
 - Consolidate the two marimo apps and put in separate tabs?
 
@@ -28,3 +28,4 @@ Develop Anywidget widget to show interactive 9x9 XPR DLP pixel array where each 
 - display physical pixel arrays as numbers from 0 to 4 indicating how many XPR pixels rely on each physical pixel.
 
 - Use code from `xpr_irradiance_visualizer.py` to display irradiance distribution.
+- Add irradiance threshold and fill factor widgets. **Seems to be kind of buggy.**

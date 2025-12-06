@@ -394,6 +394,9 @@ def _(
     current_values = xpr_grid.value.get("grid_values")
     update_physical_arrays(current_values)
 
+    # Create a trigger value that changes when arrays are updated
+    arrays_updated = id(current_values)  # Use id as a unique trigger
+
     phys_arrays_text = mo.hstack(
         [
             mo.vstack([
@@ -413,9 +416,20 @@ def _(
         gap=3.0, 
         widths=[0, 0],
     )
+    return arrays_updated, phys_arrays_text
 
-    irradiance_threshold_2 = mo.ui.dropdown(options=["1 or more", "2 or more", "3 or more", "4"], label="Threshold: overlapping images", value="1 or more")
-    return irradiance_threshold_2, phys_arrays_text
+
+@app.cell
+def _(mo):
+    irradiance_threshold_2 = mo.ui.dropdown(options=["1 or more", "2 or more", "3 or more", "4"], label="Threshold: overlapping physical arrays", value="1 or more")
+    return (irradiance_threshold_2,)
+
+
+@app.cell
+def _(mo):
+    fill_factor_2D_2 = mo.ui.number(start=0.2, stop=1.0, label="Pixel fill factor", value=0.68)
+
+    return (fill_factor_2D_2,)
 
 
 @app.cell
@@ -444,6 +458,7 @@ def _(mo):
 
 @app.cell
 def _(
+    fill_factor_2D_2,
     irradiance_threshold_2,
     mo,
     phys_arrays_text,
@@ -459,10 +474,10 @@ def _(
             mo.vstack([
                 mo.md("## XPR DLP Pixels"),
                 xpr_grid,
-                vertical_spacer,
                 # vertical_spacer,
                 mo.md("---"),
                 irradiance_threshold_2,
+                fill_factor_2D_2,
                 mo.md("---"),
             ]),
             mo.vstack([
@@ -499,8 +514,10 @@ def _(mo):
 
 @app.cell
 def _(
+    arrays_updated,
     create_grid_pattern,
     extract_np_array,
+    fill_factor_2D_2,
     np,
     phys_px_shifted_x,
     phys_px_shifted_xy,
@@ -512,12 +529,13 @@ def _(
 ):
     # Trigger reactivity by accessing xpr_grid.value
     _ = xpr_grid.value
+    _ = arrays_updated
 
     # Parameters
     grid_size = 5
     square_size = 1.0  # Grid spacing
-    fill_factor_2D = 0.68  # 68% 2D fill factor
-    fill_factor_1D = np.sqrt(fill_factor_2D) # fill_factor_2D.value)  # 1D fill factor
+    # fill_factor_2D = 0.68  # 68% 2D fill factor
+    fill_factor_1D = np.sqrt(fill_factor_2D_2.value) # fill_factor_2D.value)  # 1D fill factor
     pixels_per_square = 50  # Number of pixels per grid square
 
     # Calculate image size based on pixels per square
