@@ -4,13 +4,10 @@ Develop interactive visualization to show the actual irradiance distribution gen
 
 # Next
 
-- &#9989; Go from physical pixel arrays to irradiance map &rarr; look at my other marimo app that does this.
 - Change how physical pixel arrays are displayed. Text &rarr; black or white squares with text number in it?
 - Change name of repo and project from *Anycubic* to *XPR_DLP*.
 - Make shared functions more general to accommodate both apps.
     - &#9989; Irradiance plot.
-- &#9989; In original marimo app, remove references to 102 &mu;m and 51 &mu;m pixels.
-- &#9989; Add threshold widget.
 - Consolidate the two marimo apps and put in separate tabs?
 
 # Log
@@ -31,3 +28,4 @@ Develop Anywidget widget to show interactive 9x9 XPR DLP pixel array where each 
 - Add irradiance threshold and fill factor widgets. **Seems to be kind of buggy.**
     - Investigate. It's not clear if it's buggy or this is correct but not desired behavior.
 - Edit javascript to replace color with black/white for all on and all off buttons.
+- Change to Plotly from Matplotlib so can get hover info, had to do LOTS of playing with positioning & sizing the image to get it in the right position.

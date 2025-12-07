@@ -9,9 +9,11 @@ def _():
     import marimo as mo
     import numpy as np
     import matplotlib.pyplot as plt
+    import plotly.graph_objects as go
+    import mplcursors
     import anywidget
     import traitlets
-    return anywidget, mo, np, plt, traitlets
+    return anywidget, go, mo, np, traitlets
 
 
 @app.cell(hide_code=True)
@@ -691,7 +693,7 @@ def _(np):
 
 
 @app.cell
-def _(plt):
+def _(go, np):
     def plot_irradiance_pattern(img_data, xlim, ylim, threshold, title="All Four Patterns Overlapped"):
         eps = 1e-1
         if threshold == "1 or more":
@@ -704,23 +706,94 @@ def _(plt):
             vmin = 3 + eps
         else:
             raise ValueError(f"Incorrect threshold: {threshold}")
-        fig, ax = plt.subplots() # 2, 3, figsize=(15, 10))
-        img = ax.imshow(
-            img_data, 
-            cmap='gray', 
-            interpolation='nearest', 
-            origin='lower', 
-            extent=[xlim[0], xlim[1], ylim[0], ylim[1]],
-            vmin=vmin,
-            vmax=4
+    
+        # Create plotly figure
+        fig = go.Figure(data=go.Heatmap(
+            z=img_data,
+            x=np.linspace(xlim[0], xlim[1], img_data.shape[1]),
+            y=np.linspace(ylim[0], ylim[1], img_data.shape[0]),
+            colorscale='gray',
+            zmin=vmin,
+            zmax=4,
+            showscale=False,  # Remove colorbar
+            hovertemplate='x: %{x:.3f}<br>y: %{y:.3f}<br>value: %{z:.2f}<extra></extra>'
+        ))
+    
+        fig.update_layout(
+            # title=title,
+            # xaxis_title='x',
+            # yaxis_title='y',
+            width=360,
+            height=360,
+            showlegend=False,
+            xaxis=dict(
+                range=[xlim[0], xlim[1]], 
+                constrain='domain',
+                visible=False  # Hide entire axis
+            ),
+            yaxis=dict(
+                range=[ylim[0], ylim[1]], 
+                scaleanchor="x", 
+                scaleratio=1, 
+                constrain='domain',
+                visible=False  # Hide entire axis
+            ),        
+            # xaxis=dict(range=[xlim[0], xlim[1]], constrain='domain'),
+            # yaxis=dict(range=[ylim[0], ylim[1]], scaleanchor="x", scaleratio=1, constrain='domain'),
+            plot_bgcolor='white',
+            margin=dict(l=50, r=0, t=35, b=115)
         )
-        ax.set_title(title)
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-        ax.grid(True, alpha=0.3)
-        ax.set_aspect('equal')
-        return fig, ax
+
+        return fig, None
     return (plot_irradiance_pattern,)
+
+
+@app.cell
+def _():
+    # def plot_irradiance_pattern(img_data, xlim, ylim, threshold, title="All Four Patterns Overlapped"):
+    #     eps = 1e-1
+    #     if threshold == "1 or more":
+    #         vmin = 0
+    #     elif threshold == "2 or more":
+    #         vmin = 1 + eps
+    #     elif threshold == "3 or more":
+    #         vmin = 2 + eps
+    #     elif threshold == "4":
+    #         vmin = 3 + eps
+    #     else:
+    #         raise ValueError(f"Incorrect threshold: {threshold}")
+    #     fig, ax = plt.subplots() # 2, 3, figsize=(15, 10))
+    #     img = ax.imshow(
+    #         img_data, 
+    #         cmap='gray', 
+    #         interpolation='nearest', 
+    #         origin='lower', 
+    #         extent=[xlim[0], xlim[1], ylim[0], ylim[1]],
+    #         vmin=vmin,
+    #         vmax=4
+    #     )
+    #     ax.set_title(title)
+    #     ax.set_xlabel('x')
+    #     ax.set_ylabel('y')
+    #     ax.grid(True, alpha=0.3)
+    #     ax.set_aspect('equal')
+
+    # # Add interactive hover using mplcursors
+    #     cursor = mplcursors.cursor(img, hover=True)
+
+    #     @cursor.connect("add")
+    #     def on_add(sel):
+    #         x, y = sel.target
+    #         # Convert data coordinates to image pixel coordinates
+    #         x_pixel = int((x - xlim[0]) / (xlim[1] - xlim[0]) * img_data.shape[1])
+    #         y_pixel = int((y - ylim[0]) / (ylim[1] - ylim[0]) * img_data.shape[0])
+
+    #         if 0 <= x_pixel < img_data.shape[1] and 0 <= y_pixel < img_data.shape[0]:
+    #             pixel_value = img_data[y_pixel, x_pixel]
+    #             sel.annotation.set_text(f'Value: {pixel_value:.2f}\nx={x:.3f}, y={y:.3f}')
+
+    #     return fig, ax
+    return
 
 
 if __name__ == "__main__":
