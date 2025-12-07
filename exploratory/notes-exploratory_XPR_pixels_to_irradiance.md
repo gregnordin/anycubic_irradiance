@@ -25,7 +25,17 @@ Develop Anywidget widget to show interactive 9x9 XPR DLP pixel array where each 
 - display physical pixel arrays as numbers from 0 to 4 indicating how many XPR pixels rely on each physical pixel.
 
 - Use code from `xpr_irradiance_visualizer.py` to display irradiance distribution.
-- Add irradiance threshold and fill factor widgets. **Seems to be kind of buggy.**
-    - Investigate. It's not clear if it's buggy or this is correct but not desired behavior.
+- Add irradiance threshold and fill factor widgets. Seems to be kind of buggy.
+    - Investigate. It's not clear if it's buggy or this is correct but not desired behavior. **I think it's the latter.**
 - Edit javascript to replace color with black/white for all on and all off buttons.
 - Change to Plotly from Matplotlib so can get hover info, had to do LOTS of playing with positioning & sizing the image to get it in the right position.
+- Rename `exploratory/dev_4_XPR_9x9_array_to_physical_5x5_arrays.py` to `exploratory/dev_XPR_to_Irradiance.py`
+
+
+
+
+
+
+
+
+
