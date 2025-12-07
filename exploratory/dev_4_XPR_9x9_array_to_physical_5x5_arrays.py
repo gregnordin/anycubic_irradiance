@@ -32,51 +32,51 @@ def _(anywidget, traitlets):
           container.style.flexDirection = 'column';
           container.style.alignItems = 'center';
           container.style.fontFamily = 'Arial, sans-serif';
-      
+
           // Buttons container
           const buttonsContainer = document.createElement('div');
           buttonsContainer.style.display = 'flex';
           buttonsContainer.style.gap = '10px';
           buttonsContainer.style.marginBottom = '10px';
-      
+
           const allOnButton = document.createElement('button');
           allOnButton.textContent = 'All On';
           allOnButton.style.padding = '8px 16px';
           allOnButton.style.cursor = 'pointer';
           allOnButton.style.fontSize = '12px';
-          allOnButton.style.backgroundColor = '#4CAF50';
-          allOnButton.style.color = 'white';
-          allOnButton.style.border = '1px solid #45a049';
+          allOnButton.style.backgroundColor = 'white';
+          allOnButton.style.color = 'black';
+          allOnButton.style.border = '1px solid black';
           allOnButton.style.borderRadius = '4px';
-      
+
           const allOffButton = document.createElement('button');
           allOffButton.textContent = 'All Off';
           allOffButton.style.padding = '8px 16px';
           allOffButton.style.cursor = 'pointer';
           allOffButton.style.fontSize = '12px';
-          allOffButton.style.backgroundColor = '#f44336';
-          allOffButton.style.color = 'white';
-          allOffButton.style.border = '1px solid #da190b';
+          allOffButton.style.backgroundColor = 'white';
+          allOffButton.style.color = 'black';
+          allOffButton.style.border = '1px solid black';
           allOffButton.style.borderRadius = '4px';
-      
+
           // Add hover effects
           allOnButton.addEventListener('mouseenter', () => {
-            allOnButton.style.backgroundColor = '#45a049';
+            allOnButton.style.backgroundColor = '#F2F2F2';
           });
           allOnButton.addEventListener('mouseleave', () => {
-            allOnButton.style.backgroundColor = '#4CAF50';
+            allOnButton.style.backgroundColor = 'white';
           });
-      
+
           allOffButton.addEventListener('mouseenter', () => {
-            allOffButton.style.backgroundColor = '#da190b';
+            allOffButton.style.backgroundColor = '#F2F2F2';
           });
           allOffButton.addEventListener('mouseleave', () => {
-            allOffButton.style.backgroundColor = '#f44336';
+            allOffButton.style.backgroundColor = 'white';
           });
-      
+
           buttonsContainer.appendChild(allOnButton);
           buttonsContainer.appendChild(allOffButton);
-      
+
           const gridContainer = document.createElement('div');
           gridContainer.style.display = 'grid';
           gridContainer.style.gridTemplateColumns = 'repeat(9, 20px)';
@@ -85,19 +85,19 @@ def _(anywidget, traitlets):
           gridContainer.style.backgroundColor = '#333';
           gridContainer.style.padding = '1px';
           gridContainer.style.marginBottom = '20px';
-      
+
           const info = document.createElement('div');
           info.style.fontSize = '14px';
           info.style.color = '#333';
           info.textContent = 'Click any cell to toggle';
-      
+
           // Create grid state (all cells start black = 0)
           const gridState = Array(9).fill(null).map(() => Array(9).fill(0));
-      
+
           // Track mouse state for dragging
           let isMouseDown = false;
           let dragValue = null; // The value to paint while dragging
-      
+
           // Create cells
           const cells = [];
           for (let displayRow = 0; displayRow < 9; displayRow++) {
@@ -108,30 +108,30 @@ def _(anywidget, traitlets):
               cell.style.height = '20px';
               cell.style.backgroundColor = 'black';
               cell.style.cursor = 'pointer';
-          
+
               // Row index: 0 at bottom, 8 at top
               // displayRow 0 -> actual row 8
               // displayRow 8 -> actual row 0
               const actualRow = 8 - displayRow;
-          
+
               const toggleCell = () => {
                 // Toggle state
                 gridState[actualRow][col] = 1 - gridState[actualRow][col];
-            
+
                 // Update color
                 cell.style.backgroundColor = gridState[actualRow][col] === 0 ? 'black' : 'white';
-            
+
                 // Update info
                 info.textContent = `Last clicked: (${actualRow}, ${col})`;
-            
+
                 // Send to Python
                 model.set('last_clicked', [actualRow, col]);
                 model.set('grid_values', gridState.map(row => [...row]));
                 model.save_changes();
-            
+
                 return gridState[actualRow][col];
               };
-          
+
               const setCell = (value) => {
                 gridState[actualRow][col] = value;
                 cell.style.backgroundColor = value === 0 ? 'black' : 'white';
@@ -139,31 +139,31 @@ def _(anywidget, traitlets):
                 model.set('grid_values', gridState.map(row => [...row]));
                 model.save_changes();
               };
-          
+
               cell.addEventListener('mousedown', (e) => {
                 e.preventDefault();
                 isMouseDown = true;
                 dragValue = toggleCell();
               });
-          
+
               cell.addEventListener('mouseenter', () => {
                 if (isMouseDown && dragValue !== null) {
                   setCell(dragValue);
                   info.textContent = `Last clicked: (${actualRow}, ${col})`;
                 }
               });
-          
+
               cells[displayRow][col] = cell;
               gridContainer.appendChild(cell);
             }
           }
-      
+
           // Global mouse up handler to stop dragging
           document.addEventListener('mouseup', () => {
             isMouseDown = false;
             dragValue = null;
           });
-      
+
           // All On button - sets all cells to 1 (white)
           allOnButton.addEventListener('click', () => {
             for (let row = 0; row < 9; row++) {
@@ -177,7 +177,7 @@ def _(anywidget, traitlets):
             model.set('grid_values', gridState.map(row => [...row]));
             model.save_changes();
           });
-      
+
           // All Off button - sets all cells to 0 (black)
           allOffButton.addEventListener('click', () => {
             for (let row = 0; row < 9; row++) {
@@ -191,7 +191,7 @@ def _(anywidget, traitlets):
             model.set('grid_values', gridState.map(row => [...row]));
             model.save_changes();
           });
-      
+
           container.appendChild(buttonsContainer);
           container.appendChild(gridContainer);
           container.appendChild(info);
@@ -199,11 +199,11 @@ def _(anywidget, traitlets):
         }
         export default { render };
         """
-      
-    
+
+
         # Traitlet to track the last clicked cell
         last_clicked = traitlets.List(default_value=None, allow_none=True).tag(sync=True)
-    
+
         # Traitlet to track all grid values (0 = black, 1 = white)
         grid_values = traitlets.List(default_value=[[0]*9 for _ in range(9)]).tag(sync=True)
 
@@ -250,14 +250,14 @@ def _():
         """
         Determine indices of which 4 physical mirrors must be turned on
         to turn on XPR pixel i,j.
-    
+
         Parameters
         ----------
         i : int
             Row index of the XPR pixel
         j : int
             Column index of the XPR pixel
-    
+
         Returns
         -------
         list of tuple
@@ -268,7 +268,7 @@ def _():
             - Quadrant 1: Mirror ip,jp unshifted and x-shifted, and mirror in -y direction shifted in y and xy
             - Quadrant 2: Mirror ip,jp unshifted and y-shifted, and mirror in -x direction shifted in x and xy
             - Quadrant 3: Mirror ip,jp unshifted and x-, y-, and xy-shifted
-    
+
         Notes
         -----
         Each XPR pixel maps to a location within an unshifted physical mirror, divided
@@ -285,7 +285,6 @@ def _():
             return [(ip, jp), (ip, jp-1), (ip, jp), (ip, jp-1)]
         elif quadrant == 3:
             return [(ip, jp), (ip, jp), (ip, jp), (ip, jp)]
-
     return (xpr_to_phys_mirrors,)
 
 
@@ -331,38 +330,37 @@ def _(np, xpr_to_phys_mirrors):
     def update_physical_arrays(current_grid_values):
         """
         Update the 5x5 physical arrays based on changes in the 9x9 grid.
-    
+
         Args:
             current_grid_values: 9x9 array from grid.value.get("grid_values")
         """
         global phys_px_unshifted, phys_px_shifted_x, phys_px_shifted_y, phys_px_shifted_xy
         global previous_grid_values
-    
+
         current_grid = np.array(current_grid_values)
-    
+
         # Find cells that changed
         changed_mask = current_grid != previous_grid_values
-    
+
         # Get the 4 arrays in a list for easy indexing
         phys_arrays = [phys_px_unshifted, phys_px_shifted_x, phys_px_shifted_y, phys_px_shifted_xy]
-    
+
         # Loop over each position
         for i in range(9):
             for j in range(9):
                 if changed_mask[i, j]:
                     # Get the mapping indices for this grid position
                     indices = xpr_to_phys_mirrors(i, j)
-                
+
                     # Determine increment or decrement
                     delta = 1 if current_grid[i, j] == 1 else -1
-                
+
                     # Update each of the 4 arrays
                     for array_idx, (row, col) in enumerate(indices):
                         phys_arrays[array_idx][row, col] += delta
-    
+
         # Update previous state
         previous_grid_values = current_grid.copy()
-
     return (
         phys_px_shifted_x,
         phys_px_shifted_xy,
@@ -428,7 +426,6 @@ def _(mo):
 @app.cell
 def _(mo):
     fill_factor_2D_2 = mo.ui.number(start=0.2, stop=1.0, label="Pixel fill factor", value=0.68)
-
     return (fill_factor_2D_2,)
 
 
@@ -472,7 +469,7 @@ def _(
     mo.vstack([
         mo.hstack([
             mo.vstack([
-                mo.md("## XPR DLP Pixels"),
+                mo.center(mo.md("## XPR DLP Pixels")),
                 xpr_grid,
                 # vertical_spacer,
                 mo.md("---"),
@@ -481,7 +478,7 @@ def _(
                 mo.md("---"),
             ]),
             mo.vstack([
-                mo.md("## Generated Irradiance Pattern"),            
+                mo.center(mo.md("## Generated Irradiance Pattern")),            
                 plot_fig,
             ]),
         ]),
